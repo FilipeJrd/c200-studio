@@ -148,11 +148,11 @@ impl Studio {
                         self.settings_open = true;
                     }
                     let status = if self.connecting {
-                        "Conectando…"
+                        "Connecting…"
                     } else if self.device.is_some() {
-                        "Conectada"
+                        "Connected"
                     } else {
-                        "Sem câmera"
+                        "No camera"
                     };
                     ui.label(RichText::new(status).size(12.0).color(p.muted));
                     let (dot, _) = ui.allocate_exact_size(Vec2::splat(8.0), Sense::hover());
@@ -173,7 +173,7 @@ impl Studio {
                                 self.device
                                     .as_ref()
                                     .map(|d| d.name.as_str())
-                                    .unwrap_or("Selecionar câmera"),
+                                    .unwrap_or("Select camera"),
                             )
                             .show_ui(ui, |ui| {
                                 for device in &self.devices {
@@ -213,14 +213,14 @@ impl Studio {
         }
         let p = Palette::get(ui.ctx());
         ui.horizontal(|ui| {
-            ui.label(RichText::new("Perfil").size(12.0).color(p.muted));
+            ui.label(RichText::new("Profile").size(12.0).color(p.muted));
             let before = self.settings.selected_profile.clone();
             let mut selected = before.clone();
             egui::ComboBox::from_id_salt("profile")
                 .width(150.0)
-                .selected_text(before.as_deref().unwrap_or("Sem perfil"))
+                .selected_text(before.as_deref().unwrap_or("No profile"))
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut selected, None, "Sem perfil");
+                    ui.selectable_value(&mut selected, None, "No profile");
                     for profile in &self.settings.profiles {
                         if self
                             .device
@@ -242,9 +242,9 @@ impl Studio {
             if widgets::primary(
                 ui,
                 if self.selected_profile().is_some() {
-                    "Salvar"
+                    "Save"
                 } else {
-                    "Salvar perfil…"
+                    "Save profile…"
                 },
                 can_save && (self.dirty || self.selected_profile().is_none()),
             )
@@ -254,7 +254,7 @@ impl Studio {
             }
             ui.menu_button("···", |ui| {
                 if ui
-                    .add_enabled(can_save, egui::Button::new("Salvar como…"))
+                    .add_enabled(can_save, egui::Button::new("Save as…"))
                     .clicked()
                 {
                     self.profile_name.clear();
@@ -264,7 +264,7 @@ impl Studio {
                 if ui
                     .add_enabled(
                         self.selected_profile().is_some() && !self.edits.busy(),
-                        egui::Button::new("Renomear perfil…"),
+                        egui::Button::new("Rename profile…"),
                     )
                     .clicked()
                 {
@@ -275,7 +275,7 @@ impl Studio {
                 if ui
                     .add_enabled(
                         self.selected_profile().is_some() && !self.edits.busy(),
-                        egui::Button::new("Excluir perfil…"),
+                        egui::Button::new("Delete profile…"),
                     )
                     .clicked()
                 {
@@ -284,12 +284,12 @@ impl Studio {
                 }
             })
             .response
-            .on_hover_text("Opções do perfil");
+            .on_hover_text("Profile options");
         });
     }
     fn settings_panel(&mut self, ui: &mut egui::Ui) {
         let p = Palette::get(ui.ctx());
-        ui.label(RichText::new("Ajustes da câmera").strong().size(15.0));
+        ui.label(RichText::new("Camera settings").strong().size(15.0));
         ui.add_space(16.0);
         egui::Frame::new()
             .fill(p.background)
@@ -299,7 +299,7 @@ impl Studio {
                 ui.columns(2, |columns| {
                     for (column, (group, label)) in columns
                         .iter_mut()
-                        .zip([(Group::Framing, "Enquadramento"), (Group::Image, "Imagem")])
+                        .zip([(Group::Framing, "Framing"), (Group::Image, "Image")])
                     {
                         let active = self.group == group;
                         let button =
@@ -326,10 +326,7 @@ impl Studio {
             });
         ui.add_space(18.0);
         if self.device.is_none() {
-            ui.label(
-                RichText::new("Os ajustes aparecem quando a câmera estiver conectada.")
-                    .color(p.muted),
-            );
+            ui.label(RichText::new("Settings appear when a camera is connected.").color(p.muted));
             return;
         }
         let enabled = !self.applying && self.dialog.is_none() && !self.settings_open;
@@ -348,7 +345,7 @@ impl Studio {
     }
     fn framing_settings(&mut self, ui: &mut egui::Ui) {
         let p = Palette::get(ui.ctx());
-        ui.label("Campo de visão");
+        ui.label("Field of view");
         ui.add_space(4.0);
         if let Some(control) = self
             .control("fov")
@@ -357,7 +354,7 @@ impl Studio {
             let value = self.edits.value(&control);
             let width = (ui.available_width() - 16.0) / 3.0;
             ui.horizontal(|ui| {
-                for (degrees, label) in [(65, "Fechado"), (78, "Equilibrado"), (95, "Amplo")] {
+                for (degrees, label) in [(65, "Narrow"), (78, "Balanced"), (95, "Wide")] {
                     let selected = value == Some(degrees);
                     if widgets::fov_choice(
                         ui,
@@ -375,13 +372,13 @@ impl Studio {
             });
         } else {
             ui.label(
-                RichText::new("Campo de visão indisponível")
+                RichText::new("Field of view unavailable")
                     .small()
                     .color(p.muted),
             );
         }
         ui.add_space(22.0);
-        ui.label("Posição e zoom");
+        ui.label("Position and zoom");
         ui.add_space(6.0);
         let pan = self.control("pan_absolute");
         let tilt = self.control("tilt_absolute");
@@ -468,9 +465,9 @@ impl Studio {
         .on_hover_text(positions.join("   ·   "));
         ui.label(
             RichText::new(if supports_motion {
-                "Arraste e segure ou use as setas.\nSolte para parar. Shift: mais precisão."
+                "Drag and hold, or use the arrow keys.\nRelease to stop. Hold Shift for precision."
             } else {
-                "Este dispositivo não oferece deslocamento ajustável."
+                "This device does not support adjustable positioning."
             })
             .size(12.0)
             .color(p.muted),
@@ -481,19 +478,19 @@ impl Studio {
         self.toggle_control(
             ui,
             "horizontal_flip",
-            "Espelhar imagem",
-            Some("Também afeta outros apps"),
+            "Mirror image",
+            Some("Also affects other apps"),
         );
         if self.available("vertical_screen") {
-            self.toggle_control(ui, "vertical_screen", "Modo vertical", None);
+            self.toggle_control(ui, "vertical_screen", "Portrait mode", None);
         }
     }
     fn position_description(&self) -> String {
         let mut parts = Vec::new();
         let mut readable = false;
         for (key, positive, negative) in [
-            ("pan_absolute", "Direita", "Esquerda"),
-            ("tilt_absolute", "Acima", "Abaixo"),
+            ("pan_absolute", "Right", "Left"),
+            ("tilt_absolute", "Up", "Down"),
         ] {
             if let Some(control) = self.control(key).filter(|c| c.available)
                 && let Some(value) = self.edits.value(&control)
@@ -516,78 +513,73 @@ impl Studio {
             }
         }
         if !readable {
-            "Posição indisponível".into()
+            "Position unavailable".into()
         } else if parts.is_empty() {
-            "Posição central".into()
+            "Centered".into()
         } else {
             parts.join(" · ")
         }
     }
     fn image_settings(&mut self, ui: &mut egui::Ui) {
-        self.editor(ui, "brightness", "Brilho", false);
+        self.editor(ui, "brightness", "Brightness", false);
         ui.add_space(18.0);
         ui.separator();
         ui.add_space(10.0);
         self.toggle_control(
             ui,
             "focus_automatic_continuous",
-            "Foco automático",
-            Some("A câmera cuida do foco"),
+            "Autofocus",
+            Some("Let the camera focus for you"),
         );
         if self.value("focus_automatic_continuous") != Some(1) {
-            self.editor(ui, "focus_absolute", "Foco manual", false);
+            self.editor(ui, "focus_absolute", "Manual focus", false);
         }
         ui.add_space(8.0);
         self.toggle_control(
             ui,
             "white_balance_automatic",
-            "Cor automática",
-            Some("Balanço de branco"),
+            "Auto white balance",
+            Some("Let the camera adjust color"),
         );
         if self.value("white_balance_automatic") != Some(1) {
-            self.editor(ui, "white_balance_temperature", "Temperatura de cor", false);
+            self.editor(ui, "white_balance_temperature", "Color temperature", false);
         }
         ui.add_space(12.0);
         ui.separator();
         ui.add_space(10.0);
-        self.toggle_control(ui, "hdr", "HDR", Some("Equilibra áreas claras e escuras"));
+        self.toggle_control(ui, "hdr", "HDR", Some("Balance bright and dark areas"));
         ui.add_space(16.0);
-        egui::CollapsingHeader::new("Mais ajustes")
+        egui::CollapsingHeader::new("More settings")
             .id_salt("more-image")
             .show(ui, |ui| {
                 for (key, label) in [
-                    ("contrast", "Contraste"),
-                    ("saturation", "Saturação"),
-                    ("sharpness", "Nitidez"),
+                    ("contrast", "Contrast"),
+                    ("saturation", "Saturation"),
+                    ("sharpness", "Sharpness"),
                 ] {
                     self.editor(ui, key, label, false);
                     ui.add_space(12.0);
                 }
-                self.editor(ui, "auto_exposure", "Exposição", false);
+                self.editor(ui, "auto_exposure", "Exposure", false);
                 if self
                     .value("auto_exposure")
                     .is_none_or(|value| value == 1 || value == 2)
                 {
-                    self.editor(ui, "exposure_time_absolute", "Tempo de exposição", false);
+                    self.editor(ui, "exposure_time_absolute", "Exposure time", false);
                 }
                 ui.add_space(8.0);
-                self.editor(
-                    ui,
-                    "power_line_frequency",
-                    "Frequência da iluminação",
-                    false,
-                );
+                self.editor(ui, "power_line_frequency", "Lighting frequency", false);
             });
         ui.add_space(6.0);
-        egui::CollapsingHeader::new("Opções técnicas").id_salt("technical").show(ui, |ui| {
-            self.editor(ui,"hue","Matiz",false);
+        egui::CollapsingHeader::new("Technical options").id_salt("technical").show(ui, |ui| {
+            self.editor(ui,"hue","Hue",false);
             self.editor(ui,"gamma","Gamma",false);
-            self.editor(ui,"anti_flicker","Anti-flicker proprietário",true);
-            ui.label(RichText::new("Valor bruto, independente da frequência da iluminação. A semântica dos números ainda não foi confirmada.").small().color(Palette::get(ui.ctx()).muted));
+            self.editor(ui,"anti_flicker","Vendor anti-flicker",true);
+            ui.label(RichText::new("Raw value, separate from lighting frequency. The meaning of these values has not been confirmed.").small().color(Palette::get(ui.ctx()).muted));
             ui.add_space(12.0);
-            self.editor(ui,"fov","Campo de visão · valor bruto",true);
-            self.editor(ui,"pan_absolute","Deslocamento horizontal",true);
-            self.editor(ui,"tilt_absolute","Deslocamento vertical",true);
+            self.editor(ui,"fov","Field of view · raw value",true);
+            self.editor(ui,"pan_absolute","Horizontal position",true);
+            self.editor(ui,"tilt_absolute","Vertical position",true);
         });
     }
     fn toggle_control(&mut self, ui: &mut egui::Ui, key: &str, label: &str, hint: Option<&str>) {
@@ -595,7 +587,7 @@ impl Studio {
             return;
         };
         let Some(value) = self.edits.value(&control) else {
-            ui.label(RichText::new(format!("{label} · leitura indisponível")).small());
+            ui.label(RichText::new(format!("{label} · reading unavailable")).small());
             return;
         };
         let mut checked = value != 0;
@@ -619,7 +611,7 @@ impl Studio {
             let p = Palette::get(ui.ctx());
             let Some(original) = self.edits.value(&control) else {
                 ui.label(
-                    RichText::new(format!("{label} · não confirmado"))
+                    RichText::new(format!("{label} · unconfirmed"))
                         .small()
                         .color(p.warning),
                 );
@@ -634,7 +626,7 @@ impl Studio {
                             RichText::new(if key == "white_balance_temperature" && !raw {
                                 format!("{value} K")
                             } else if key == "zoom_absolute" && control.min == 100 && !raw {
-                                format!("{:.2}×", value as f64 / 100.0).replace('.', ",")
+                                format!("{:.2}×", value as f64 / 100.0)
                             } else {
                                 value.to_string()
                             })
@@ -657,7 +649,7 @@ impl Studio {
                         .iter()
                         .find(|(id, _)| *id == value)
                         .map(|(_, name)| name.clone())
-                        .unwrap_or_else(|| format!("Valor {value}"));
+                        .unwrap_or_else(|| format!("Value {value}"));
                     egui::ComboBox::from_id_salt("value")
                         .width(ui.available_width() - 8.0)
                         .selected_text(text)
@@ -668,14 +660,14 @@ impl Studio {
                         });
                 } else if matches!(control.kind, ControlKind::Boolean) {
                     let mut checked = value != 0;
-                    if ui.checkbox(&mut checked, "Ativado").changed() {
+                    if ui.checkbox(&mut checked, "Enabled").changed() {
                         value = i64::from(checked);
                     }
                 }
             })
             .response
             .on_hover_text(format!(
-                "Intervalo do dispositivo: {} a {} · passo {}{}",
+                "Device range: {} to {} · step {}{}",
                 control.min,
                 control.max,
                 control.step,
@@ -690,9 +682,9 @@ impl Studio {
             }
             if key == "brightness" && !raw {
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Mais escuro").small().color(p.muted));
+                    ui.label(RichText::new("Darker").small().color(p.muted));
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        ui.label(RichText::new("Mais claro").small().color(p.muted));
+                        ui.label(RichText::new("Brighter").small().color(p.muted));
                     });
                 });
             }
@@ -701,7 +693,7 @@ impl Studio {
     fn preview_panel(&mut self, ui: &mut egui::Ui) {
         let p = Palette::get(ui.ctx());
         ui.horizontal_wrapped(|ui| {
-            ui.label(RichText::new("Sua imagem").size(19.0).strong());
+            ui.label(RichText::new("Your preview").size(19.0).strong());
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 let width = if self.selected_profile().is_some() {
                     328.0_f32
@@ -744,33 +736,29 @@ impl Studio {
             painter.text(
                 badge.center(),
                 Align2::CENTER_CENTER,
-                if self.demo {
-                    "Demonstração"
-                } else {
-                    "Prévia ativa"
-                },
+                if self.demo { "Demo" } else { "Preview active" },
                 FontId::proportional(12.0),
                 Color32::WHITE,
             );
         } else {
             let (title, detail) = if self.connecting {
-                ("Conectando câmera…", "Aguarde a leitura dos ajustes.")
+                ("Connecting camera…", "Reading camera settings.")
             } else if self.device.is_none() {
                 (
-                    "Conecte sua PowerConf C200",
-                    "O dispositivo será reconhecido automaticamente.",
+                    "Connect your PowerConf C200",
+                    "Your camera will be detected automatically.",
                 )
             } else if !self.settings.preview_enabled {
                 (
-                    "Prévia pausada",
-                    "A captura deste app está liberada para usar a câmera em uma chamada.",
+                    "Preview paused",
+                    "Capture is released so you can use the camera in a call.",
                 )
-            } else if self.preview_message.starts_with("Iniciando") {
-                ("Iniciando prévia…", "Preparando a captura de vídeo.")
+            } else if self.preview_message.starts_with("Starting") {
+                ("Starting preview…", "Preparing video capture.")
             } else {
                 (
-                    "Prévia indisponível",
-                    "Retome a prévia para tentar novamente. Os ajustes continuam disponíveis.",
+                    "Preview unavailable",
+                    "Resume preview to try again. Camera settings remain available.",
                 )
             };
             let title_galley = painter.layout(
@@ -803,20 +791,20 @@ impl Studio {
                     self.mode
                         .as_ref()
                         .map(|m| format!("{} × {} · {} fps", m.width, m.height, m.fps))
-                        .unwrap_or_else(|| "Sem captura".into()),
+                        .unwrap_or_else(|| "No capture".into()),
                 )
                 .small()
                 .color(p.muted),
             );
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                let running = self.preview_active || self.preview_message.starts_with("Iniciando");
+                let running = self.preview_active || self.preview_message.starts_with("Starting");
                 if ui
                     .add_enabled(
                         self.device.is_some() && self.mode.is_some() && !self.applying,
                         egui::Button::new(if running {
-                            "Pausar prévia"
+                            "Pause preview"
                         } else {
-                            "Retomar prévia"
+                            "Resume preview"
                         })
                         .fill(Color32::TRANSPARENT)
                         .stroke(Stroke::NONE),
@@ -835,8 +823,8 @@ impl Studio {
             });
         });
         ui.add_space(10.0);
-        ui.label(RichText::new("Ajustes aplicados à câmera em tempo real. Para usá-la em uma chamada, pause a prévia deste app.").small().color(p.muted));
-        if self.device.is_none() && !self.connecting && ui.button("Procurar câmera").clicked() {
+        ui.label(RichText::new("Settings apply to the camera in real time. Pause this preview to use the camera in a call.").small().color(p.muted));
+        if self.device.is_none() && !self.connecting && ui.button("Find camera").clicked() {
             if let Some(device) = self
                 .devices
                 .iter()
@@ -877,26 +865,26 @@ impl Studio {
             return;
         }
         let mut open = true;
-        egui::Window::new("Preferências").open(&mut open).collapsible(false).resizable(true).default_width(460.0).max_height((ctx.content_rect().height()-70.0).max(240.0)).anchor(Align2::CENTER_CENTER,Vec2::ZERO).vscroll(true).show(ctx, |ui| {
+        egui::Window::new("Preferences").open(&mut open).collapsible(false).resizable(true).default_width(460.0).max_height((ctx.content_rect().height()-70.0).max(240.0)).anchor(Align2::CENTER_CENTER,Vec2::ZERO).vscroll(true).show(ctx, |ui| {
             let p = Palette::get(ctx);
-            ui.label(RichText::new("Aparência").strong());
+            ui.label(RichText::new("Appearance").strong());
             let mut theme = self.settings.theme.clone();
             ui.horizontal(|ui| {
-                for (value,label) in [(None,"Sistema"),(Some("light".into()),"Claro"),(Some("dark".into()),"Escuro")] { ui.selectable_value(&mut theme,value,label); }
+                for (value,label) in [(None,"System"),(Some("light".into()),"Light"),(Some("dark".into()),"Dark")] { ui.selectable_value(&mut theme,value,label); }
             });
             if theme != self.settings.theme {
                 ctx.set_theme(match theme.as_deref() {Some("light")=>egui::ThemePreference::Light,Some("dark")=>egui::ThemePreference::Dark,_=>egui::ThemePreference::System});
                 self.settings.theme = theme; self.save_settings();
             }
-            ui.add_space(16.0); ui.label(RichText::new("Formato da prévia").strong());
-            ui.label(RichText::new("Esta escolha afeta somente a captura do C200 Studio. Cada aplicativo define sua própria resolução.").small().color(p.muted));
+            ui.add_space(16.0); ui.label(RichText::new("Preview format").strong());
+            ui.label(RichText::new("This only affects capture in C200 Studio. Each app chooses its own resolution.").small().color(p.muted));
             let before = self.mode.clone();
-            egui::ComboBox::from_id_salt("capture-mode").width(330.0).selected_text(self.mode.as_ref().map(CaptureMode::label).unwrap_or_else(||"Sem modo disponível".into())).show_ui(ui, |ui| { for mode in &self.modes { ui.selectable_value(&mut self.mode,Some(mode.clone()),mode.label()); } });
+            egui::ComboBox::from_id_salt("capture-mode").width(330.0).selected_text(self.mode.as_ref().map(CaptureMode::label).unwrap_or_else(||"No mode available".into())).show_ui(ui, |ui| { for mode in &self.modes { ui.selectable_value(&mut self.mode,Some(mode.clone()),mode.label()); } });
             if self.mode!=before && self.settings.preview_enabled { self.send(Command::Preview(self.mode.clone())); }
             ui.add_space(16.0); ui.separator(); ui.add_space(8.0);
             ui.horizontal_wrapped(|ui| {
-                if ui.add_enabled(self.device.is_some() && !self.edits.busy() && !self.applying,egui::Button::new("Atualizar leitura da câmera")).clicked() { self.send(Command::Refresh); }
-                if ui.add_enabled(!self.connecting && !self.edits.busy(),egui::Button::new("Reconectar…")).clicked() {
+                if ui.add_enabled(self.device.is_some() && !self.edits.busy() && !self.applying,egui::Button::new("Refresh camera settings")).clicked() { self.send(Command::Refresh); }
+                if ui.add_enabled(!self.connecting && !self.edits.busy(),egui::Button::new("Reconnect…")).clicked() {
                     if let Some(device) = self.device.clone().or_else(||self.devices.iter().find(|d|Some(&d.id)==self.wanted_device.as_ref()).cloned()) { self.request_action(PendingAction::Device(device),ctx); self.settings_open=false; }
                     else { self.send(Command::Scan); }
                 }
@@ -904,17 +892,17 @@ impl Studio {
             if let Some((message,error))=&self.notice { ui.add_space(10.0); ui.label(RichText::new(message).color(if *error {p.warning} else {p.muted})); }
             if !self.preview_active && self.settings.preview_enabled { ui.label(RichText::new(&self.preview_message).small().color(p.muted)); }
             ui.add_space(10.0);
-            egui::CollapsingHeader::new("Compatibilidade e controles").show(ui, |ui| {
+            egui::CollapsingHeader::new("Compatibility and controls").show(ui, |ui| {
                 for control in &self.controls {
                     ui.label(RichText::new(&control.label).strong());
-                    if control.available { ui.label(RichText::new(format!("{} · intervalo {}…{} · passo {}{}",control.value.map(|v|v.to_string()).unwrap_or_else(||"não confirmado".into()),control.min,control.max,control.step,if control.inactive {" · automático ativo"} else {""})).small().color(p.muted)); }
+                    if control.available { ui.label(RichText::new(format!("{} · range {}…{} · step {}{}",control.value.map(|v|v.to_string()).unwrap_or_else(||"unconfirmed".into()),control.min,control.max,control.step,if control.inactive {" · automatic mode active"} else {""})).small().color(p.muted)); }
                     if let Some(reason)=&control.reason { ui.label(RichText::new(reason).small().color(p.muted)); }
                     ui.add_space(8.0);
                 }
             });
             ui.add_space(14.0); ui.separator();
-            ui.label(RichText::new(format!("C200 Studio {} · independente e não oficial",env!("CARGO_PKG_VERSION"))).small().color(p.muted));
-            ui.label(RichText::new("Os perfis são locais. Fechar o app encerra a captura e o monitoramento.").small().color(p.muted));
+            ui.label(RichText::new(format!("C200 Studio {} · independent, unofficial app",env!("CARGO_PKG_VERSION"))).small().color(p.muted));
+            ui.label(RichText::new("Profiles are stored locally. Closing the app stops capture and device monitoring.").small().color(p.muted));
         });
         if !open {
             self.settings_open = false;
@@ -930,29 +918,29 @@ impl Studio {
         let mut cancel = false;
         let mut delete = false;
         let title = match dialog {
-            ProfileDialog::Save => "Salvar perfil",
-            ProfileDialog::Rename => "Renomear perfil",
-            ProfileDialog::Delete => "Excluir perfil?",
-            ProfileDialog::Unsaved => "Salvar alterações no perfil?",
+            ProfileDialog::Save => "Save profile",
+            ProfileDialog::Rename => "Rename profile",
+            ProfileDialog::Delete => "Delete profile?",
+            ProfileDialog::Unsaved => "Save profile changes?",
         };
         egui::Window::new(title).open(&mut open).collapsible(false).resizable(false).anchor(Align2::CENTER_CENTER,Vec2::ZERO).show(ctx, |ui| {
             ui.set_max_width(390.0);
             match dialog {
                 ProfileDialog::Save | ProfileDialog::Rename => {
-                    ui.label("Nome do perfil");
-                    ui.add(egui::TextEdit::singleline(&mut self.profile_name).desired_width(300.0).hint_text("Ex.: Trabalho, luz natural…"));
-                    ui.label(RichText::new("Será reaplicado ao abrir o app ou reconectar esta câmera.").small().color(Palette::get(ctx).muted));
-                    ui.horizontal(|ui| { save=widgets::primary(ui,"Salvar",!self.profile_name.trim().is_empty() && !self.edits.busy() && !self.applying).clicked(); cancel=ui.button("Cancelar").clicked(); });
+                    ui.label("Profile name");
+                    ui.add(egui::TextEdit::singleline(&mut self.profile_name).desired_width(300.0).hint_text("e.g. Work, Daylight…"));
+                    ui.label(RichText::new("Reapplied when you open the app or reconnect this camera.").small().color(Palette::get(ctx).muted));
+                    ui.horizontal(|ui| { save=widgets::primary(ui,"Save",!self.profile_name.trim().is_empty() && !self.edits.busy() && !self.applying).clicked(); cancel=ui.button("Cancel").clicked(); });
                 }
                 ProfileDialog::Unsaved => {
-                    ui.label("Os ajustes já estão na câmera. Salve um perfil para reutilizá-los depois.");
-                    if self.edits.busy() { ui.label("Aguardando confirmação dos últimos ajustes…"); }
-                    ui.horizontal_wrapped(|ui| { save=widgets::primary(ui,"Salvar e continuar",!self.edits.busy() && !self.applying && self.config_writable).clicked(); skip=ui.add_enabled(!self.edits.busy() && !self.applying,egui::Button::new("Continuar sem salvar")).clicked(); cancel=ui.button("Cancelar").clicked(); });
+                    ui.label("These settings are already on the camera. Save a profile to reuse them later.");
+                    if self.edits.busy() { ui.label("Waiting for the latest settings to be confirmed…"); }
+                    ui.horizontal_wrapped(|ui| { save=widgets::primary(ui,"Save and continue",!self.edits.busy() && !self.applying && self.config_writable).clicked(); skip=ui.add_enabled(!self.edits.busy() && !self.applying,egui::Button::new("Continue without saving")).clicked(); cancel=ui.button("Cancel").clicked(); });
                 }
                 ProfileDialog::Delete => {
-                    ui.label(format!("Excluir o perfil “{}”?",self.settings.selected_profile.as_deref().unwrap_or("")));
-                    ui.label("Os ajustes atuais da câmera serão mantidos.");
-                    ui.horizontal(|ui| { delete=ui.button("Excluir perfil").clicked(); cancel=ui.button("Cancelar").clicked(); });
+                    ui.label(format!("Delete the profile “{}”?",self.settings.selected_profile.as_deref().unwrap_or("")));
+                    ui.label("Current camera settings will be kept.");
+                    ui.horizontal(|ui| { delete=ui.button("Delete profile").clicked(); cancel=ui.button("Cancel").clicked(); });
                 }
             }
             if let Some((message,true))=&self.notice { ui.add_space(8.0); ui.label(RichText::new(message).small().color(Palette::get(ctx).warning)); }
@@ -1001,7 +989,7 @@ impl Studio {
                         .is_some_and(|d| self.settings.profile(&name, &d.id).is_some());
                     if exists && self.settings.selected_profile.as_deref() != Some(name.as_str()) {
                         self.notice = Some((
-                            "Já existe um perfil com esse nome. Escolha outro nome.".into(),
+                            "A profile with this name already exists. Choose another name.".into(),
                             true,
                         ));
                     } else if self.store_profile(name) {
@@ -1022,7 +1010,8 @@ impl Studio {
                         return;
                     }
                     if self.settings.profile(&name, &device_id).is_some() {
-                        self.notice = Some(("Já existe um perfil com esse nome.".into(), true));
+                        self.notice =
+                            Some(("A profile with this name already exists.".into(), true));
                         return;
                     }
                     if let Some(profile) = self
@@ -1076,20 +1065,20 @@ impl Studio {
             .show(ctx, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     let (text, color) = if self.applying {
-                        ("Aplicando perfil…".into(), p.muted)
+                        ("Applying profile…".into(), p.muted)
                     } else if self.edits.busy() {
-                        ("Confirmando ajustes na câmera…".into(), p.muted)
+                        ("Confirming camera settings…".into(), p.muted)
                     } else if self.dirty {
-                        ("Aplicado à câmera · perfil não salvo".into(), p.warning)
+                        ("Applied to camera · profile not saved".into(), p.warning)
                     } else if let Some(profile) = self.selected_profile() {
-                        (format!("Perfil {} · salvo", profile.name), p.muted)
+                        (format!("Profile {} · saved", profile.name), p.muted)
                     } else {
-                        ("Sem perfil · ajustes atuais da câmera".into(), p.muted)
+                        ("No profile · current camera settings".into(), p.muted)
                     };
                     ui.label(RichText::new(text).small().color(color));
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         ui.label(
-                            RichText::new("Alterações valem em outros apps")
+                            RichText::new("Changes also apply in other apps")
                                 .small()
                                 .color(p.muted),
                         );
@@ -1106,13 +1095,12 @@ impl Studio {
                 .show(ctx, |ui| {
                     ui.horizontal_wrapped(|ui| {
                         ui.label(
-                            RichText::new("Não foi possível concluir uma operação.")
-                                .color(p.warning),
+                            RichText::new("An operation could not be completed.").color(p.warning),
                         );
-                        if ui.small_button("Ver detalhes").clicked() {
+                        if ui.small_button("View details").clicked() {
                             self.settings_open = true;
                         }
-                        if ui.small_button("Fechar").clicked() {
+                        if ui.small_button("Close").clicked() {
                             self.notice = None;
                         }
                     });

@@ -55,7 +55,7 @@ impl Transport for IoctlTransport {
             size: data
                 .len()
                 .try_into()
-                .map_err(|_| invalid("Payload grande demais"))?,
+                .map_err(|_| invalid("Payload too large"))?,
             data: data.as_mut_ptr(),
         };
         // _IOWR('u', 0x21, struct uvc_xu_control_query), generated with the
@@ -92,7 +92,7 @@ fn payload(io: &impl Transport, control: VendorControl) -> io::Result<Vec<u8>> {
         _ => 1,
     };
     if !(minimum..=64).contains(&len) {
-        return Err(invalid("Comprimento inesperado do controle proprietário"));
+        return Err(invalid("Unexpected vendor control length"));
     }
     let mut data = vec![0; len];
     io.query(control.selector, GET_CUR, &mut data)?;
@@ -106,7 +106,7 @@ pub fn read(io: &impl Transport, control: VendorControl) -> io::Result<i64> {
         Encoding::Byte => i64::from(data[0]),
         Encoding::Boolean => {
             if data[0] > 1 {
-                return Err(invalid("Valor booleano proprietário desconhecido"));
+                return Err(invalid("Unknown vendor boolean value"));
             }
             i64::from(data[0])
         }
@@ -120,7 +120,7 @@ pub fn write(io: &impl Transport, control: VendorControl, value: i64) -> io::Res
         Encoding::Fov => 65535,
     };
     if !(0..=maximum).contains(&value) {
-        return Err(invalid("Valor proprietário fora dos limites"));
+        return Err(invalid("Vendor value out of range"));
     }
     // Preserve the upstream request sequence, including GET_CUR before SET_CUR.
     let mut data = payload(io, control)?;

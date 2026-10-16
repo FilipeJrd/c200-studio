@@ -31,7 +31,7 @@ fn args() -> Result<Args> {
             "--config" | "--screenshot" => {
                 let value = input
                     .next()
-                    .ok_or_else(|| Error::Message(format!("Falta o caminho depois de {arg}")))?;
+                    .ok_or_else(|| Error::Message(format!("Missing path after {arg}")))?;
                 if arg == "--config" {
                     args.config = Some(value.into());
                 } else {
@@ -40,13 +40,13 @@ fn args() -> Result<Args> {
             }
             "--help" | "-h" => {
                 println!(
-                    "C200 Studio\n\nUso: c200-studio [opções]\n  --demo                 Câmera simulada, sem acessar hardware\n  --diagnose             Diagnóstico JSON; somente leitura de controles\n  --probe-preview        Capturar 10 frames para validar o preview (sem salvar imagens)\n  --config CAMINHO       Arquivo de configuração alternativo\n  --smoke-test           Fechar automaticamente após 4 segundos\n  --screenshot CAMINHO   Salvar uma captura da janela e sair\n  --help                 Mostrar esta ajuda"
+                    "C200 Studio\n\nUsage: c200-studio [options]\n  --demo                 Simulated camera; no hardware access\n  --diagnose             JSON diagnostics; read-only camera controls\n  --probe-preview        Capture 10 frames to verify preview (no images saved)\n  --config PATH          Use an alternate configuration file\n  --smoke-test           Close automatically after 4 seconds\n  --screenshot PATH      Save a window screenshot and exit\n  --help                 Show this help"
                 );
                 std::process::exit(0);
             }
             _ => {
                 return Err(Error::Message(format!(
-                    "Opção desconhecida: {arg}. Use --help."
+                    "Unknown option: {arg}. Use --help."
                 )));
             }
         }
@@ -87,12 +87,12 @@ fn probe(demo: bool) -> Result<()> {
     let devices = backend.devices()?;
     if devices.len() != 1 {
         return Err(Error::Message(
-            "Conecte exatamente uma C200 para o teste de preview".into(),
+            "Connect exactly one C200 to run the preview probe".into(),
         ));
     }
     backend.connect(&devices[0])?;
     let mode = c200_core::preferred_mode(&backend.modes()?)
-        .ok_or_else(|| Error::Message("Nenhum modo compatível".into()))?;
+        .ok_or_else(|| Error::Message("No compatible capture mode".into()))?;
     let mut preview = c200_linux::preview::Preview::default();
     let (tx, rx) = std::sync::mpsc::channel();
     preview.start(0, devices[0].clone(), mode, tx);
@@ -105,7 +105,7 @@ fn probe(demo: bool) -> Result<()> {
                     return Err(Error::Message(error));
                 }
                 c200_linux::preview::PreviewEvent::Started(_, mode) => {
-                    println!("Modo: {}", mode.label())
+                    println!("Mode: {}", mode.label())
                 }
             }
         }
@@ -118,7 +118,7 @@ fn probe(demo: bool) -> Result<()> {
             count += 1;
             if count == 1 {
                 println!(
-                    "Frame RGB: {} × {} · {} bytes",
+                    "RGB frame: {} × {} · {} bytes",
                     frame.width,
                     frame.height,
                     frame.rgb.len()
@@ -129,11 +129,9 @@ fn probe(demo: bool) -> Result<()> {
     }
     preview.stop();
     if count < 10 {
-        return Err(Error::Message(format!(
-            "Recebidos apenas {count}/10 frames"
-        )));
+        return Err(Error::Message(format!("Received only {count}/10 frames")));
     }
-    println!("Preview validado: {count} frames; captura encerrada.");
+    println!("Preview verified: {count} frames; capture stopped.");
     Ok(())
 }
 

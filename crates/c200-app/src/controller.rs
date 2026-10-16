@@ -137,7 +137,7 @@ impl Worker {
                     self.device = None;
                     self.restore = None;
                     self.emit(Event::Disconnected(
-                        "Câmera desconectada. Aguardando reconexão…".into(),
+                        "Camera disconnected. Waiting to reconnect…".into(),
                     ));
                 }
                 if force || devices != self.previous_devices {
@@ -159,7 +159,7 @@ impl Worker {
                     .flat_map(|(_, keys)| keys)
                     .chain(required)
                     .filter(|key| !controls.iter().any(|c| &c.key == *key && c.value.is_some()))
-                    .map(|key| format!("{key}: falha na leitura de confirmação"))
+                    .map(|key| format!("{key}: readback failed"))
                     .collect();
                 self.emit(Event::Snapshot { controls, ack });
                 errors
@@ -167,7 +167,7 @@ impl Worker {
             Err(error) => {
                 self.emit(Event::WriteFailed(ack));
                 self.emit(Event::Error(error.to_string()));
-                vec![format!("Falha na leitura de confirmação: {error}")]
+                vec![format!("Readback failed: {error}")]
             }
         }
     }
@@ -179,7 +179,7 @@ impl Worker {
             self.emit(Event::Applied(errors));
         } else if !errors.is_empty() {
             self.emit(Event::Error(format!(
-                "Alguns ajustes não puderam ser restaurados: {}",
+                "Some settings could not be restored: {}",
                 errors.join("; ")
             )));
         }
@@ -189,7 +189,7 @@ impl Worker {
             self.epoch += 1;
             self.emit(Event::Preview {
                 active: false,
-                message: "Iniciando preview…".into(),
+                message: "Starting preview…".into(),
                 mode: None,
             });
             self.preview
@@ -223,17 +223,17 @@ impl Worker {
                         Ok(()) => {
                             self.device = Some(device.clone());
                             let controls = match self.backend.controls() { Ok(c) => c, Err(e) => { self.emit(Event::Error(e.to_string())); Vec::new() } };
-                            let modes = self.backend.modes().unwrap_or_else(|e| { self.emit(Event::Error(format!("Não foi possível listar os modos de vídeo: {e}"))); Vec::new() });
+                            let modes = self.backend.modes().unwrap_or_else(|e| { self.emit(Event::Error(format!("Could not list capture modes: {e}"))); Vec::new() });
                             let mode = preferred_mode(&modes);
                             self.emit(Event::Connected { device, controls, modes, selected_mode: mode.clone() });
                             if preview && let Some(mode) = mode {
                                 self.profile_pending = profile.is_some(); self.restore = profile; self.start_preview(mode);
                             } else {
-                                self.emit(Event::Preview { active: false, message: "Preview liberado".into(), mode: None });
+                                self.emit(Event::Preview { active: false, message: "Preview stopped".into(), mode: None });
                                 if let Some(values) = profile { self.apply(values, true); }
                             }
                         }
-                        Err(error) => self.emit(Event::Disconnected(format!("Não foi possível abrir {}: {}. Verifique as permissões da sessão e a conexão USB.", device.path, error))),
+                        Err(error) => self.emit(Event::Disconnected(format!("Could not open {}: {}. Check session permissions and the USB connection.", device.path, error))),
                     }
                 }
                 Ok(Command::Refresh) => {
@@ -302,7 +302,7 @@ impl Worker {
                         self.profile_pending = false;
                         self.emit(Event::Preview {
                             active: false,
-                            message: "Preview liberado para outros aplicativos".into(),
+                            message: "Capture released for other apps".into(),
                             mode: None,
                         });
                     }
@@ -317,7 +317,7 @@ impl Worker {
                         self.profile_pending = false;
                         self.emit(Event::Preview {
                             active: true,
-                            message: "Preview ao vivo".into(),
+                            message: "Live preview".into(),
                             mode: Some(mode),
                         });
                         self.snapshot(Vec::new());
@@ -327,7 +327,7 @@ impl Worker {
                             self.apply(values, self.profile_pending);
                         }
                         self.profile_pending = false;
-                        self.emit(Event::Preview { active: false, message: format!("Preview indisponível: {error}. Se a câmera estiver em uso, libere-a no outro aplicativo."), mode: None });
+                        self.emit(Event::Preview { active: false, message: format!("Preview unavailable: {error}. If another app is using the camera, stop its capture and try again."), mode: None });
                         self.snapshot(Vec::new());
                     }
                     _ => (),
@@ -460,7 +460,7 @@ mod tests {
         fn disconnect(&mut self) {}
         fn controls(&self) -> Result<Vec<Control>> {
             if self.wrote {
-                Err(Error::Message("USB desconectado".into()))
+                Err(Error::Message("USB disconnected".into()))
             } else {
                 Ok(c200_core::mock::mock_controls())
             }

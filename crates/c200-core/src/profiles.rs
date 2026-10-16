@@ -53,7 +53,7 @@ impl Settings {
         let settings: Self = serde_json::from_slice(&contents)?;
         if settings.version != VERSION {
             return Err(Error::Message(format!(
-                "Versão de configuração não suportada: {}. O arquivo foi preservado.",
+                "Unsupported configuration version: {}. The file has been preserved.",
                 settings.version
             )));
         }
@@ -90,7 +90,7 @@ impl Settings {
     }
     pub fn store(&mut self, profile: Profile) -> Result<()> {
         if profile.name.trim().is_empty() {
-            return Err(Error::Message("Dê um nome ao perfil".into()));
+            return Err(Error::Message("Enter a profile name".into()));
         }
         if let Some(existing) = self
             .profiles
@@ -111,7 +111,7 @@ pub fn config_path() -> Result<PathBuf> {
     }
     std::env::var_os("HOME")
         .map(|home| PathBuf::from(home).join(".config/c200-studio/settings.json"))
-        .ok_or_else(|| Error::Message("HOME e XDG_CONFIG_HOME não estão definidos".into()))
+        .ok_or_else(|| Error::Message("Neither HOME nor XDG_CONFIG_HOME is set".into()))
 }
 
 #[cfg(test)]
@@ -124,7 +124,7 @@ mod tests {
         let mut settings = Settings::default();
         settings
             .store(Profile {
-                name: "Reuniões".into(),
+                name: "Meetings · ☕".into(),
                 device_id: "camera-a".into(),
                 values: BTreeMap::from([("fov".into(), 78)]),
             })
@@ -133,10 +133,10 @@ mod tests {
         settings.save(&path).unwrap();
         let loaded = Settings::load(&path).unwrap();
         assert_eq!(
-            loaded.profile("Reuniões", "camera-a").unwrap().values["fov"],
+            loaded.profile("Meetings · ☕", "camera-a").unwrap().values["fov"],
             78
         );
-        assert!(loaded.profile("Reuniões", "camera-b").is_none());
+        assert!(loaded.profile("Meetings · ☕", "camera-b").is_none());
     }
     #[test]
     fn invalid_or_future_settings_are_not_silently_replaced() {

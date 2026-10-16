@@ -67,7 +67,7 @@ impl Preview {
                     capture(epoch, &device, &mode, &stop, &frames, &events)
                 }
             }));
-            let error = match result { Ok(Ok(())) => None, Ok(Err(e)) => Some(e.to_string()), Err(_) => Some("A sessão de captura foi interrompida pelo driver. Reconecte a câmera ou tente iniciar o preview novamente.".into()) };
+            let error = match result { Ok(Ok(())) => None, Ok(Err(e)) => Some(e.to_string()), Err(_) => Some("The driver interrupted the capture session. Reconnect the camera or try starting preview again.".into()) };
             if !stop.load(Ordering::Relaxed)
                 && let Some(error) = error
             {
@@ -99,7 +99,7 @@ fn capture(
         .fourcc
         .as_bytes()
         .try_into()
-        .map_err(|_| Error::Message("Formato de vídeo inválido".into()))?;
+        .map_err(|_| Error::Message("Invalid video format".into()))?;
     let format = device.set_format(&v4l::Format::new(
         mode.width,
         mode.height,
@@ -107,7 +107,7 @@ fn capture(
     ))?;
     if format.fourcc != FourCC::new(b"MJPG") && format.fourcc != FourCC::new(b"YUYV") {
         return Err(Error::Message(
-            "O driver selecionou um formato sem suporte".into(),
+            "The driver selected an unsupported format".into(),
         ));
     }
     let parameters = device.set_params(&v4l::video::capture::Parameters::with_fps(mode.fps))?;
@@ -135,8 +135,7 @@ fn capture(
             {
                 if last_frame.elapsed() > Duration::from_secs(5) {
                     return Err(Error::Message(
-                        "A câmera não está entregando frames. Libere o preview e tente novamente."
-                            .into(),
+                        "The camera is not delivering frames. Pause preview and try again.".into(),
                     ));
                 }
                 continue;
@@ -158,7 +157,7 @@ fn capture(
 
 pub fn decode(mode: &CaptureMode, stride: usize, data: &[u8], sequence: u64) -> Result<Frame> {
     if mode.width == 0 || mode.height == 0 || mode.width > 8192 || mode.height > 8192 {
-        return Err(Error::Message("Dimensões de vídeo inválidas".into()));
+        return Err(Error::Message("Invalid video dimensions".into()));
     }
     if mode.fourcc == "MJPG" {
         let mut reader =
@@ -169,7 +168,7 @@ pub fn decode(mode: &CaptureMode, stride: usize, data: &[u8], sequence: u64) -> 
         reader.limits(limits);
         let rgb = reader
             .decode()
-            .map_err(|e| Error::Message(format!("Frame MJPEG inválido: {e}")))?
+            .map_err(|e| Error::Message(format!("Invalid MJPEG frame: {e}")))?
             .into_rgb8();
         return Ok(Frame {
             width: rgb.width(),
@@ -179,14 +178,14 @@ pub fn decode(mode: &CaptureMode, stride: usize, data: &[u8], sequence: u64) -> 
         });
     }
     if mode.fourcc != "YUYV" || !mode.width.is_multiple_of(2) {
-        return Err(Error::Message("Formato de vídeo não suportado".into()));
+        return Err(Error::Message("Unsupported video format".into()));
     }
     let width = mode.width as usize;
     let height = mode.height as usize;
     let row_bytes = width * 2;
     let stride = stride.max(row_bytes);
     if data.len() < (height - 1) * stride + row_bytes {
-        return Err(Error::Message("Frame YUYV incompleto".into()));
+        return Err(Error::Message("Incomplete YUYV frame".into()));
     }
     let mut rgb = vec![0; width * height * 3];
     for row in 0..height {

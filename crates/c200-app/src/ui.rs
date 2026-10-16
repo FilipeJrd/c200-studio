@@ -78,7 +78,7 @@ impl Studio {
                 false,
                 Some((
                     format!(
-                        "{error} Corrija ou mova {} para permitir salvar configurações.",
+                        "{error} Fix or move {} to allow saving settings.",
                         config.display()
                     ),
                     true,
@@ -104,7 +104,7 @@ impl Studio {
             modes: Vec::new(),
             mode: None,
             preview_active: false,
-            preview_message: "Aguardando câmera".into(),
+            preview_message: "Waiting for camera".into(),
             texture: None,
             group: Group::Framing,
             edits: Edits::default(),
@@ -128,7 +128,7 @@ impl Studio {
     fn send(&mut self, command: Command) {
         if self.controller.commands.send(command).is_err() {
             self.notice = Some((
-                "O serviço da câmera foi encerrado. Reinicie o aplicativo.".into(),
+                "The camera worker has stopped. Restart the app.".into(),
                 true,
             ));
         }
@@ -146,7 +146,7 @@ impl Studio {
         if !self.config_writable {
             self.notice = Some((
                 format!(
-                    "Configuração preservada: corrija ou mova {} antes de salvar.",
+                    "Configuration preserved: fix or move {} before saving.",
                     self.config.display()
                 ),
                 true,
@@ -154,7 +154,7 @@ impl Studio {
             return false;
         }
         if let Err(error) = self.settings.save(&self.config) {
-            self.notice = Some((format!("Não foi possível salvar: {error}"), true));
+            self.notice = Some((format!("Could not save: {error}"), true));
             return false;
         }
         true
@@ -188,7 +188,7 @@ impl Studio {
         self.device = None;
         self.modes.clear();
         self.mode = None;
-        self.preview_message = "Conectando câmera…".into();
+        self.preview_message = "Connecting camera…".into();
         self.applying = profile.is_some();
         self.controls.clear();
         self.texture = None;
@@ -253,7 +253,7 @@ impl Studio {
                         if uncertain.contains(&control.key) {
                             control.value = None;
                             control.reason = Some(
-                                "Valor não confirmado. Atualize a leitura nas preferências.".into(),
+                                "Value unconfirmed. Refresh camera settings in Preferences.".into(),
                             );
                         }
                     }
@@ -267,7 +267,7 @@ impl Studio {
                         None
                     } else {
                         Some((
-                            format!("Aplicação parcial do perfil: {}", errors.join("; ")),
+                            format!("Profile partially applied: {}", errors.join("; ")),
                             true,
                         ))
                     };
@@ -380,7 +380,7 @@ impl Studio {
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
                 Err(error) => {
-                    eprintln!("Falha ao salvar screenshot: {error}");
+                    eprintln!("Could not save screenshot: {error}");
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
             }

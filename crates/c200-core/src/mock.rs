@@ -15,9 +15,9 @@ pub fn mock_controls() -> Vec<Control> {
             let (kind, min, max, value) = match def.key {
                 "fov" => (
                     ControlKind::Menu(vec![
-                        (65, "65° · fechado".into()),
-                        (78, "78° · médio".into()),
-                        (95, "95° · amplo".into()),
+                        (65, "65° · narrow".into()),
+                        (78, "78° · balanced".into()),
+                        (95, "95° · wide".into()),
                     ]),
                     0,
                     65535,
@@ -28,17 +28,14 @@ pub fn mock_controls() -> Vec<Control> {
                     (ControlKind::Boolean, 0, 1, 1)
                 }
                 "auto_exposure" => (
-                    ControlKind::Menu(vec![
-                        (1, "Manual".into()),
-                        (3, "Prioridade de abertura".into()),
-                    ]),
+                    ControlKind::Menu(vec![(1, "Manual".into()), (3, "Aperture priority".into())]),
                     0,
                     3,
                     3,
                 ),
                 "power_line_frequency" => (
                     ControlKind::Menu(vec![
-                        (0, "Desativado".into()),
+                        (0, "Disabled".into()),
                         (1, "50 Hz".into()),
                         (2, "60 Hz".into()),
                     ]),
@@ -75,7 +72,7 @@ impl CameraBackend for MockCamera {
     fn devices(&self) -> Result<Vec<DeviceInfo>> {
         Ok(vec![DeviceInfo {
             id: "demo:c200".into(),
-            name: "PowerConf C200 · demonstração".into(),
+            name: "PowerConf C200 · demo".into(),
             path: "demo".into(),
         }])
     }
@@ -88,7 +85,7 @@ impl CameraBackend for MockCamera {
     }
     fn controls(&self) -> Result<Vec<Control>> {
         if !self.connected {
-            return Err(Error::Message("Câmera desconectada".into()));
+            return Err(Error::Message("Camera disconnected".into()));
         }
         let mut controls = mock_controls();
         for control in &mut controls {
@@ -110,7 +107,7 @@ impl CameraBackend for MockCamera {
             .controls()?
             .into_iter()
             .find(|c| c.key == key)
-            .ok_or_else(|| Error::Message("Controle desconhecido".into()))?;
+            .ok_or_else(|| Error::Message("Unknown control".into()))?;
         control.validate(value)?;
         self.values.insert(key.into(), value);
         self.writes.push((key.into(), value));

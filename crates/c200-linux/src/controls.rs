@@ -38,7 +38,7 @@ impl LinuxCamera {
     fn device(&self) -> Result<&Device> {
         self.device
             .as_ref()
-            .ok_or_else(|| Error::Message("Câmera desconectada".into()))
+            .ok_or_else(|| Error::Message("Camera disconnected".into()))
     }
 }
 
@@ -64,15 +64,17 @@ impl CameraBackend for LinuxCamera {
                 (|| -> Result<Control> {
                     let (readable, writable) = vendor::capabilities(&io, spec)?;
                     if !readable {
-                        return Err(Error::Message("Leitura não suportada pelo firmware".into()));
+                        return Err(Error::Message(
+                            "Reading is not supported by this firmware".into(),
+                        ));
                     }
                     let value = vendor::read(&io, spec)?;
                     let (kind, max) = match spec.encoding {
                         vendor::Encoding::Fov => (
                             ControlKind::Menu(vec![
-                                (65, "65° · fechado".into()),
-                                (78, "78° · médio".into()),
-                                (95, "95° · amplo".into()),
+                                (65, "65° · narrow".into()),
+                                (78, "78° · balanced".into()),
+                                (95, "95° · wide".into()),
                             ]),
                             65535,
                         ),
@@ -99,18 +101,18 @@ impl CameraBackend for LinuxCamera {
             } else {
                 (|| -> Result<Control> {
                     let id = standard_id(def.key)
-                        .ok_or_else(|| Error::Message("Controle desconhecido".into()))?;
+                        .ok_or_else(|| Error::Message("Unknown control".into()))?;
                     let desc = descriptions
                         .iter()
                         .find(|d| d.id == id)
-                        .ok_or_else(|| Error::Message("Não oferecido por esta câmera".into()))?;
+                        .ok_or_else(|| Error::Message("Not supported by this camera".into()))?;
                     if desc.flags.contains(Flags::DISABLED) {
-                        return Err(Error::Message("Desabilitado pelo driver".into()));
+                        return Err(Error::Message("Disabled by the driver".into()));
                     }
                     let value = match device.control(id)?.value {
                         Value::Integer(v) => v,
                         Value::Boolean(v) => i64::from(v),
-                        _ => return Err(Error::Message("Tipo não suportado".into())),
+                        _ => return Err(Error::Message("Unsupported type".into())),
                     };
                     let kind = match desc.typ {
                         Type::Boolean => ControlKind::Boolean,
@@ -144,9 +146,9 @@ impl CameraBackend for LinuxCamera {
                         inactive,
                         volatile: desc.flags.contains(Flags::VOLATILE),
                         reason: if inactive {
-                            Some("Indisponível no modo atual da câmera".into())
+                            Some("Unavailable in the current camera mode".into())
                         } else if !writable {
-                            Some("Somente leitura".into())
+                            Some("Read-only".into())
                         } else {
                             None
                         },
@@ -155,7 +157,7 @@ impl CameraBackend for LinuxCamera {
             };
             controls.push(result.unwrap_or_else(|error| {
                 let reason = if vendor::control(def.key).is_some() && matches!(&error, Error::Io(io) if matches!(io.raw_os_error(), Some(libc::ENOENT | libc::EINVAL | libc::ENOTTY | libc::EPIPE))) {
-                    "Não oferecido por este firmware".to_string()
+                    "Not supported by this firmware".to_string()
                 } else { error.to_string() };
                 unavailable(def, reason)
             }));
@@ -168,7 +170,7 @@ impl CameraBackend for LinuxCamera {
             if !dependency_active(&control.key, &values) {
                 control.inactive = true;
                 control.reason =
-                    Some("Desative o modo automático correspondente para ajustar".into());
+                    Some("Turn off the corresponding automatic mode to adjust this setting".into());
             }
         }
         Ok(controls)
@@ -178,7 +180,7 @@ impl CameraBackend for LinuxCamera {
             .controls()?
             .into_iter()
             .find(|c| c.key == key)
-            .ok_or_else(|| Error::Message("Controle desconhecido".into()))?;
+            .ok_or_else(|| Error::Message("Unknown control".into()))?;
         control.validate(value)?;
         let device = self.device()?;
         if let Some(spec) = vendor::control(key) {

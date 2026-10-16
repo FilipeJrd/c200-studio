@@ -13,7 +13,7 @@ pub enum Error {
     Message(String),
     #[error("{0}")]
     Io(#[from] std::io::Error),
-    #[error("Configuração inválida: {0}")]
+    #[error("Invalid configuration: {0}")]
     Json(#[from] serde_json::Error),
 }
 
@@ -36,10 +36,10 @@ impl Group {
     pub const ALL: [Self; 4] = [Self::Framing, Self::Image, Self::Focus, Self::Advanced];
     pub fn label(self) -> &'static str {
         match self {
-            Self::Framing => "Enquadramento",
-            Self::Image => "Imagem",
-            Self::Focus => "Foco e exposição",
-            Self::Advanced => "Avançado",
+            Self::Framing => "Framing",
+            Self::Image => "Image",
+            Self::Focus => "Focus and exposure",
+            Self::Advanced => "Advanced",
         }
     }
 }
@@ -76,13 +76,13 @@ impl Control {
     pub fn validate(&self, value: i64) -> Result<()> {
         if !self.editable() {
             return Err(Error::Message(format!(
-                "{} não está disponível para alteração",
+                "{} is not available for editing",
                 self.label
             )));
         }
         if value < self.min || value > self.max || (value - self.min) % self.step.max(1) != 0 {
             return Err(Error::Message(format!(
-                "{}: valor fora dos limites ou do passo permitido",
+                "{}: value is outside the range or does not match the allowed step",
                 self.label
             )));
         }
@@ -91,7 +91,7 @@ impl Control {
             && !items.iter().any(|(id, _)| *id == value)
         {
             return Err(Error::Message(format!(
-                "{}: opção não suportada",
+                "{}: unsupported option",
                 self.label
             )));
         }
@@ -107,7 +107,7 @@ pub struct Definition {
 pub const DEFINITIONS: [Definition; 21] = [
     Definition {
         key: "fov",
-        label: "Campo de visão",
+        label: "Field of view",
         group: Group::Framing,
     },
     Definition {
@@ -117,42 +117,42 @@ pub const DEFINITIONS: [Definition; 21] = [
     },
     Definition {
         key: "horizontal_flip",
-        label: "Espelhar horizontalmente",
+        label: "Mirror horizontally",
         group: Group::Framing,
     },
     Definition {
         key: "vertical_screen",
-        label: "Modo vertical da câmera",
+        label: "Camera portrait mode",
         group: Group::Framing,
     },
     Definition {
         key: "anti_flicker",
-        label: "Anti-flicker proprietário (valor bruto)",
+        label: "Vendor anti-flicker (raw value)",
         group: Group::Advanced,
     },
     Definition {
         key: "brightness",
-        label: "Brilho",
+        label: "Brightness",
         group: Group::Image,
     },
     Definition {
         key: "contrast",
-        label: "Contraste",
+        label: "Contrast",
         group: Group::Image,
     },
     Definition {
         key: "saturation",
-        label: "Saturação",
+        label: "Saturation",
         group: Group::Image,
     },
     Definition {
         key: "hue",
-        label: "Matiz",
+        label: "Hue",
         group: Group::Advanced,
     },
     Definition {
         key: "white_balance_automatic",
-        label: "Balanço de branco automático",
+        label: "Automatic white balance",
         group: Group::Image,
     },
     Definition {
@@ -162,52 +162,52 @@ pub const DEFINITIONS: [Definition; 21] = [
     },
     Definition {
         key: "power_line_frequency",
-        label: "Frequência da rede elétrica",
+        label: "Power line frequency",
         group: Group::Image,
     },
     Definition {
         key: "white_balance_temperature",
-        label: "Temperatura de cor",
+        label: "Color temperature",
         group: Group::Image,
     },
     Definition {
         key: "sharpness",
-        label: "Nitidez",
+        label: "Sharpness",
         group: Group::Image,
     },
     Definition {
         key: "auto_exposure",
-        label: "Modo de exposição",
+        label: "Exposure mode",
         group: Group::Focus,
     },
     Definition {
         key: "exposure_time_absolute",
-        label: "Tempo de exposição",
+        label: "Exposure time",
         group: Group::Focus,
     },
     Definition {
         key: "pan_absolute",
-        label: "Deslocamento horizontal",
+        label: "Horizontal position",
         group: Group::Framing,
     },
     Definition {
         key: "tilt_absolute",
-        label: "Deslocamento vertical",
+        label: "Vertical position",
         group: Group::Framing,
     },
     Definition {
         key: "focus_absolute",
-        label: "Foco manual",
+        label: "Manual focus",
         group: Group::Focus,
     },
     Definition {
         key: "focus_automatic_continuous",
-        label: "Foco automático",
+        label: "Autofocus",
         group: Group::Focus,
     },
     Definition {
         key: "zoom_absolute",
-        label: "Zoom digital",
+        label: "Digital zoom",
         group: Group::Framing,
     },
 ];

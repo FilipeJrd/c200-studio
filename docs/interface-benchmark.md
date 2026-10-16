@@ -1,140 +1,207 @@
-# Proposta de interface do C200 Studio
+# C200 Studio interface proposal
 
-A direção Studio foi implementada na versão 0.2.0, incluindo joystick, zoom,
-duas seções de ajustes e o fluxo de salvar perfis. A alternativa Compacto
-permanece como proposta. Este documento preserva a análise que orientou o desenho;
-consulte README.md e VALIDATION.md para o comportamento e a validação da versão.
+The Studio direction was implemented in version 0.2.0, including the joystick,
+zoom, two settings sections, and profile saving. Compact remains a proposal.
+This document preserves the analysis behind the design; see README.md and
+VALIDATION.md for the implemented behavior and validation.
 
-Pesquisa em 16/10/2026. Benchmark qualitativo de documentação e capturas públicas dos fabricantes, comparado com a tela e o código do C200 Studio. Os aplicativos oficiais não foram instalados nem submetidos a testes de uso. As capturas publicadas podem representar versões e dispositivos diferentes dos atuais.
+Research date: October 16, 2026. This is a qualitative comparison of manufacturer
+documentation and public screenshots against C200 Studio's UI and code. The
+official apps were not installed or usability-tested. Published screenshots may
+show different versions and devices from those currently available.
 
-## Recomendação
+## Recommendation
 
-Adotar a proposta **Studio**: prévia dominante à esquerda e um inspetor enxuto à direita, com duas seções estáveis: **Enquadramento** e **Imagem**. Ajustes adicionais aparecem por expansão. Usar a simplicidade do Logi Tune como referência de prioridade e os grupos do AnkerWork/Camera Hub como referência de organização. Manter Rust/egui para esta etapa: o problema observado é principalmente hierarquia, composição e comportamento dos controles. Reavaliar o framework se uma prova visual em egui demonstrar limitações concretas.
+Use **Studio**: a prominent preview on the left and a compact inspector on the
+right, with two stable sections, **Framing** and **Image**. Reveal additional
+settings through expansion. Use Logi Tune's simplicity to guide priorities and
+AnkerWork/Camera Hub to guide grouping. Keep Rust/egui for this stage: the main
+issues observed are hierarchy, composition, and control behavior. Reconsider
+the framework if a visual implementation in egui reveals concrete limitations.
 
-O modo **Compacto** é uma alternativa para ajustes rápidos, com prévia acima dos controles. Pode entrar depois; não é necessário implementar duas experiências para entregar o primeiro redesenho.
+**Compact** is an alternative for quick adjustments, with the preview above
+the controls. It can come later; the initial redesign does not need two modes.
 
 ## Benchmark
 
-| Referência | Evidência observada | Aplicação ao C200 Studio | Cuidado |
+| Reference | Observed evidence | Application to C200 Studio | Limitations |
 | --- | --- | --- | --- |
-| [AnkerWork — Software Download Center](https://us.ankerwork.com/pages/download-software/) | As capturas mostram grupos de controles, alternância automático/manual e indicações visuais de brilho e temperatura. | Agrupar por intenção e explicar os extremos dos sliders; manter a relação entre automático e manual junto ao controle. | As imagens incluem recursos de outros dispositivos, como iluminação. Não tratar a captura publicada como uma tela específica da C200 nem importar esses recursos. |
-| [Logi Tune — manual oficial da Brio 500, p. 8 / 32](https://www.logitech.com/assets/66219/2/brio-500.pdf) | Tela compacta com prévia, seleção direta do campo de visão e entrada separada para ajustes de imagem. | Dar acesso imediato ao enquadramento e deixar ajustes menos frequentes em um segundo nível. | O manual é de 2022. É uma referência documentada de layout, não verificação da versão mais recente. Os ângulos da Brio não são os da C200. |
-| [Elgato Camera Hub — Settings Overview](https://help.elgato.com/hc/en-us/articles/4405055113357-Elgato-Facecam-Camera-Hub-Settings-Overview) | Seções de dispositivo, zoom, imagem, exposição, balanço de branco e processamento; dependências explícitas dos modos automáticos. | Criar grupos coerentes e revelar o ajuste manual perto de seu modo automático. | O painel completo é denso para nosso uso cotidiano. Salvar na memória da câmera é um recurso daquele produto; não presumir suporte equivalente na C200. |
-| [Camo Studio — Navigating Camo’s interface](https://camo.com/support/camo/how-to-use-camo) | Prévia central dominante, estados de conexão distintos e um painel rápido para ações frequentes. Guia atualizado em julho de 2026. | Dar peso à imagem, separar falha de conexão de prévia pausada e reservar uma experiência compacta para uso rápido. | A interface completa tem dois painéis laterais e recursos de produção. Reproduzir toda a densidade seria inadequado ao escopo atual. |
+| [AnkerWork — Software Download Center](https://us.ankerwork.com/pages/download-software/) | Screenshots show control groups, automatic/manual modes, and visual brightness/temperature cues. | Group by intent, explain slider endpoints, and keep automatic/manual dependencies together. | Images include features of other devices, such as lighting. They are not evidence of a C200-specific screen or of features supported by the C200. |
+| [Logi Tune — official Brio 500 manual, pp. 8 / 32](https://www.logitech.com/assets/66219/2/brio-500.pdf) | Compact screen with preview, direct field-of-view selection, and separate access to image adjustments. | Make framing immediately accessible and move less frequent settings to a second level. | The 2022 manual documents a layout, not the latest app version. Brio field-of-view angles differ from the C200's. |
+| [Elgato Camera Hub — Settings Overview](https://help.elgato.com/hc/en-us/articles/4405055113357-Elgato-Facecam-Camera-Hub-Settings-Overview) | Device, zoom, image, exposure, white balance, and processing sections, with explicit automatic-mode dependencies. | Use coherent groups and reveal manual settings near their automatic mode. | The full panel is dense for everyday use. Saving settings to the camera is a feature of that product; do not assume equivalent C200 support. |
+| [Camo Studio — Navigating Camo’s interface](https://camo.com/support/camo/how-to-use-camo) | Prominent central preview, distinct connection states, and a quick panel for frequent actions. Guide updated in July 2026. | Prioritize the image, distinguish connection failure from paused preview, and reserve a compact experience for quick use. | The complete UI has two side panels and production features. Its full density would not suit this project's scope. |
 
-As recomendações de usabilidade abaixo são inferências de design a partir dessas referências e da inspeção do MVP, não resultados medidos com usuários.
+The usability recommendations below are design inferences from these references
+and inspection of the MVP, rather than results measured with users.
 
-## Problemas observados no MVP
+## Issues observed in the MVP
 
-1. O cabeçalho usa duas faixas e mantém marca, slogan, tema, câmera, reconexão e perfis em evidência ao mesmo tempo.
-2. As quatro abas do inspetor quebram em duas linhas. O espaço reservado à navegação reduz o espaço útil para ajustes.
-3. Cada controle recebe título, editor, texto auxiliar e separador semelhantes. Há pouca diferença entre uma escolha frequente e um ajuste técnico.
-4. Selecionar um perfil já o aplica, mas existe outro botão “Aplicar”. Isso torna a ação redundante e deixa a relação entre aplicar e salvar menos clara.
-5. “Liberar câmera” exige conhecer a disputa de captura entre aplicativos. A ação fica mais compreensível como “Pausar prévia”, acompanhada de sua consequência.
-6. Controles indisponíveis e valores brutos aparecem junto ao fluxo comum, embora sejam úteis principalmente para compatibilidade e diagnóstico.
+1. A two-row header gives the brand, slogan, theme, camera, reconnect, and
+   profiles similar prominence.
+2. Four inspector tabs wrap onto two lines, reducing space for settings.
+3. Every control has a similar title, editor, help text, and separator. Frequent
+   choices and technical settings have little visual distinction.
+4. Selecting a profile already applies it, but another Apply button duplicates
+   the action and obscures the relationship between applying and saving.
+5. Release camera requires understanding capture contention. Pause preview,
+   paired with an explanation of its effect, is easier to understand.
+6. Unavailable controls and raw values occupy the main flow even though they
+   primarily serve diagnostics and compatibility checks.
 
-## Estrutura proposta
+## Proposed structure
 
-### Cabeçalho
+### Header
 
-- Nome C200 Studio em tamanho discreto.
-- Nome da câmera e estado de conexão. Exibir seletor de dispositivos somente quando houver alternativas ou quando for necessário escolher uma câmera.
-- Preferências para aparência, formato da prévia, informações e diagnóstico.
-- Reconexão contextual nos estados de falha; não precisa ocupar a tela durante operação normal.
+- A restrained C200 Studio name.
+- Camera name and connection state. Show a device selector when alternatives
+  exist or the user needs to choose a camera.
+- Preferences for appearance, preview format, information, and diagnostics.
+- Contextual reconnect actions on failure, without occupying normal operation.
 
-### Área de imagem
+### Preview area
 
-- Prévia com proporção correta, sem deformação ou recorte involuntário.
-- Perfil salvo próximo da imagem; selecionar aplica, salvar atualiza o perfil explicitamente.
-- Ação “Salvar” habilitada quando os valores confirmados diferirem do perfil. Primeiro uso oferece “Salvar perfil…”. Nomear, salvar como, renomear e excluir ficam no menu de perfis.
-- Resolução e FPS descritos como **formato da prévia deste app**. Não sugerir que essa escolha configura a resolução do Meet, Zoom ou OBS.
-- Ação “Pausar prévia”: fecha somente a captura do C200 Studio. Não significa desligar a câmera globalmente nem interromper outra aplicação.
-- Evitar um botão de captura de foto ou gravação nesta etapa, pois esses recursos não fazem parte do backend atual.
+- Preserve the image's aspect ratio, without distortion or unintended cropping.
+- Keep the saved profile near the image: selecting applies; saving explicitly
+  updates the profile.
+- Enable Save when confirmed values differ from the profile. Offer Save profile…
+  on first use. Naming, save as, rename, and delete belong in the profile menu.
+- Describe resolution and frame rate as **this app's preview format**. Do not
+  imply they configure the resolution used by Meet, Zoom, or OBS.
+- Pause preview only closes C200 Studio's capture. It does not disable the
+  camera globally or interrupt another app.
+- Do not add photo or recording buttons before the backend supports them.
 
-### Inspetor
+### Inspector
 
-| Grupo | Controles e comportamento |
+| Group | Controls and behavior |
 | --- | --- |
-| Enquadramento | 65° Fechado, 78° Equilibrado, 95° Amplo; joystick de deslocamento horizontal/vertical, zoom e espelhamento. Todos ficam juntos no primeiro nível. |
-| Imagem | Brilho, foco automático, cor automática e HDR, conforme disponibilidade real do dispositivo. Foco e cor manuais aparecem ao desligar seu automático. |
-| Mais ajustes de imagem | Exposição automática/manual, contraste, saturação, matiz, gamma e nitidez. Manter os controles previstos pelo backend e respeitar suas dependências. |
-| Opções técnicas | Frequência da rede elétrica, anti-flicker proprietário com valor bruto e explicação, modo vertical quando suportado e detalhes de compatibilidade. Não inventar rótulos em Hz para valores proprietários ainda não decodificados. |
+| Framing | 65° Narrow, 78° Balanced, 95° Wide; a two-axis positioning joystick, zoom, and mirroring, together at the first level. |
+| Image | Brightness, autofocus, automatic white balance, and HDR, according to device capabilities. Reveal manual focus/color when automatic mode is off. |
+| More image settings | Automatic/manual exposure, contrast, saturation, hue, gamma, and sharpness. Keep existing backend controls and respect dependencies. |
+| Technical options | Power line frequency, raw vendor anti-flicker with an explanation, portrait mode when supported, and compatibility details. Do not invent Hz labels for undecoded vendor values. |
 
-Preservar os 21 controles conhecidos, acessíveis por expansão e opções técnicas, sem exigir que todos apareçam na tela inicial. Nunca esconder silenciosamente falhas de leitura: capacidades ausentes aparecem nos detalhes de compatibilidade; falhas de operação devem gerar feedback contextual.
+Preserve access to all 21 known controls through expansion and technical options,
+without showing every control on the initial screen. Never silently hide read
+failures: compatibility details explain unavailable capabilities; operation
+failures require contextual feedback.
 
-### Joystick de enquadramento
+### Framing joystick
 
-Refinamento solicitado após a primeira proposta: manter os deslocamentos visíveis junto do campo de visão, com um joystick virtual de dois eixos e zoom ao lado.
+The first proposal was refined to keep positioning visible beside field of view,
+with a two-axis virtual joystick and adjacent zoom control.
 
-- Arrastar e segurar indica direção e intensidade. Movimento diagonal atua nos dois eixos, com velocidade total limitada para não acelerar na diagonal.
-- Soltar faz a alavanca voltar ao centro e interrompe o movimento; a imagem conserva a posição escolhida. Esse retorno não recentraliza a câmera.
-- As setas do teclado fazem passos pequenos; Shift + seta oferece passos ainda menores.
-- O estado persistente é a posição horizontal/vertical e o zoom; a posição temporária da alavanca não entra no perfil.
-- Cancelamento do gesto, perda de foco e troca de seção ou janela precisam interromper o movimento. A implementação Rust deve fazer o mesmo ao desconectar o dispositivo.
-- Usar `pan_absolute`, `tilt_absolute` e `zoom_absolute` existentes, convertendo direção em incrementos limitados pelos valores mínimo, máximo e passo anunciados pelo driver. Não criar uma função de recorte somente na prévia que pareça alterar a imagem dos outros aplicativos.
-- A implementação deve conferir quais combinações de FOV/zoom permitem deslocamento e informar limites. O protótipo apenas simula essa relação por recorte e mantém a imagem dentro da área disponível; não é prova do comportamento do firmware.
-- Não adicionar rastreamento automático ou movimento motorizado à proposta. O controle representa os deslocamentos já previstos no app.
+- Dragging and holding indicates direction and intensity. Diagonal movement
+  acts on both axes with bounded total speed to avoid diagonal acceleration.
+- Releasing centers the stick and stops movement while retaining the chosen
+  framing. Returning the stick does not recenter the camera.
+- Arrow keys move in small steps; Shift + arrow offers finer steps.
+- Persistent state is horizontal/vertical position and zoom. The stick's
+  temporary displacement is not saved in the profile.
+- Gesture cancellation, focus loss, changing section, and opening a dialog
+  must stop movement. Disconnecting the device must do the same.
+- Use existing `pan_absolute`, `tilt_absolute`, and `zoom_absolute` controls,
+  converting direction into increments bounded by device ranges and steps.
+  Do not present a preview-only crop as a change that applies in other apps.
+- Check which field-of-view/zoom combinations allow positioning and explain
+  limits. The prototype only illustrates this relation using a bounded crop;
+  it is not evidence of firmware behavior.
+- Do not add automatic tracking or imply motorized camera movement. The control
+  represents positioning already available through the app's backend.
 
-A primeira proposta colocava zoom e deslocamentos no segundo nível; esta revisão os promove para a seção principal de Enquadramento. As duas abas cabem em uma única linha.
+The initial proposal put zoom and positioning at a second level. This revision
+promotes them to Framing. Both section tabs fit on a single line.
 
-### Aplicação e perfis
+### Applying settings and saving profiles
 
-1. O usuário muda um controle.
-2. A interface indica aplicação pendente de maneira discreta, sem mover o layout.
-3. O backend confirma pelo readback; só então a interface mostra “Aplicado à câmera · perfil não salvo”.
-4. Salvar persiste o perfil local e mostra “Perfil Trabalho · salvo”. Não afirma que o firmware guardou o perfil.
-5. Uma falha mantém o valor confirmado anterior e explica o problema próximo ao controle.
-6. Trocar de perfil com alterações não salvas oferece salvar, descartar ou cancelar. Esse tratamento precisa ser implementado; o protótipo ilustra apenas a seleção e o estado de edição.
+1. The user changes a control.
+2. The interface discreetly indicates pending application without moving layout.
+3. The backend confirms by readback. Only then show Applied to camera · profile
+   not saved.
+4. Saving persists the local profile and shows Profile Work · saved. It does
+   not claim the firmware has stored a profile.
+5. A failure retains the previous confirmed value and provides contextual feedback.
+6. Switching profiles with unsaved changes offers save, continue without saving,
+   or cancel. The original prototype only illustrates selection and dirty state;
+   this decision flow must be implemented in the actual app.
 
-Os nomes “Trabalho” e “Luz natural” no protótipo representam perfis de exemplo. Não implicam presets universais de iluminação nem detecção automática de ambiente.
+Work and Daylight in the prototype are example profile names, not universal
+lighting presets or automatic scene detection.
 
-### Estados
+### States
 
-| Estado | Mensagem e ação |
+| State | Message and action |
 | --- | --- |
-| Sem câmera | “Conecte sua PowerConf C200.” Reconhecimento automático e acesso ao diagnóstico se necessário. |
-| Conectando | Indicação discreta de conexão; controles preservam posição e aguardam leitura. |
-| Prévia ativa | Imagem e ação “Pausar prévia”. |
-| Prévia pausada | “A captura deste app está liberada para usar a câmera em uma chamada.” Ação “Retomar prévia”. |
-| Captura indisponível | “Não foi possível iniciar a prévia.” Sugerir outra captura apenas quando houver evidência; oferecer tentativa e detalhes. Manter controles disponíveis quando o driver permitir. |
-| Desconectada durante uso | Preservar perfil e informar desconexão; desabilitar escrita até reconectar. |
+| No camera | Connect your PowerConf C200. Automatic detection and access to diagnostics when needed. |
+| Connecting | Discreet progress; controls retain position while awaiting readback. |
+| Preview active | Image and Pause preview action. |
+| Preview paused | Capture is released so you can use the camera in a call. Resume preview action. |
+| Capture unavailable | Explain that preview could not start; offer retry and details. Suggest contention only when supported by evidence. Keep controls usable when the driver permits it. |
+| Disconnected during use | Keep the profile, report disconnection, and disable writes until reconnection. |
 
-Não afirmar que outro aplicativo usa a câmera apenas porque a captura falhou. Não identificar aplicativos sem uma fonte real dessa informação.
+Capture failure alone does not prove another app is using the camera. Do not
+identify other apps without a reliable source for that information.
 
-## Direção visual
+## Visual direction
 
-- Paleta neutra com um único destaque menta; tons claros e escuros seguem o sistema.
-- Grade de espaçamento de 8 px. Preferir controles com altura de 36–40 px em desktop e áreas de interação maiores quando necessário.
-- Texto de controle em 14 px, títulos de grupo em 15–16 px e título da área em 18 px; apoio em 12 px com contraste suficiente.
-- Inspetor com aproximadamente 308–340 px. Janela de referência próxima de 1100 × 760; adaptar abaixo disso sem quebrar a navegação em múltiplas linhas.
-- Poucas divisórias, agrupamento por espaço, cantos discretos e estados de foco visíveis.
-- Evitar animações contínuas, saltos de layout, pop-ups de sucesso para cada slider e excesso de ícones sem rótulo.
-- Transições curtas opcionais, respeitando redução de movimento. Prioridade para resposta fluida e texto legível em escalas de tela de 100%, 150% e 200%.
+- Neutral palette with one mint accent; light and dark themes follow the system.
+- An 8 px spacing grid; prefer 36–40 px desktop controls and larger interaction
+  areas when needed.
+- Control text at 14 px, group titles at 15–16 px, section titles at 18 px,
+  and supporting text at 12 px with sufficient contrast.
+- An inspector approximately 308–340 px wide. Reference window around
+  1100 × 760; adapt to smaller sizes without wrapping navigation across rows.
+- Few separators, grouping through spacing, subtle corners, and visible focus.
+- Avoid continuous animations, layout jumps, success pop-ups for every slider,
+  and excessive unlabeled icons.
+- Optional short transitions should respect reduced motion. Prioritize smooth
+  response and legibility at 100%, 150%, and 200% display scaling.
 
-## Implementação sugerida
+## Proposed implementation sequence
 
-1. Criar tokens de estilo e componentes egui: cabeçalho, seletor segmentado, linha de ajuste, alternância, seção expansível e indicador de estado. Começar por uma tela fiel à proposta Studio.
-2. Substituir as quatro abas atuais pelas duas seções Enquadramento e Imagem, com divulgação progressiva dentro de Imagem. Implementar o joystick com captura do ponteiro, cancelamento do gesto e acesso por teclado. Renderizar controles conforme capacidades e dependências; manter acesso aos controles técnicos.
-3. Separar estados de captura, conexão, aplicação pendente e perfil alterado. Resolver o fluxo de perfil sem duplicar “Aplicar”.
-4. Preservar threads de captura/comandos existentes. Evitar operações de dispositivo no render e manter o slider responsivo enquanto a confirmação vem do backend.
-5. Validar com a C200 real: gravação e readback, pausa que libera captura, reconexão, foco/cor automáticos, ausência de modo vertical e alterações externas.
-6. Gerar novo AppImage somente após validar o redesenho. O executável e o AppImage atuais não foram modificados por este estudo.
+1. Create style tokens and egui components: header, segmented selector, setting
+   row, toggle, expandable section, and status indicator. Start with a screen
+   faithful to Studio.
+2. Replace the four tabs with Framing and Image, revealing additional image
+   settings progressively. Implement pointer capture, gesture cancellation,
+   and keyboard access for the joystick. Respect capabilities and dependencies
+   while keeping technical controls accessible.
+3. Separate capture, connection, pending application, and unsaved profile states.
+   Resolve profile saving without a duplicate Apply action.
+4. Preserve capture/command workers. Keep device I/O out of rendering and keep
+   sliders responsive while the backend confirms values.
+5. Validate real-camera writes/readback, pause/release, reconnection, automatic
+   focus/color, missing portrait mode, and externally changed controls.
+6. Build a new AppImage after validating the redesign. The original design
+   study itself did not change the executable or AppImage; implementation and
+   validation followed separately.
 
-Não é necessário migrar para Tauri para experimentar essa proposta. O protótipo em conversa representa aparência e fluxo; ele não demonstra paridade de renderização entre HTML e egui. Uma implementação de referência em egui deve ser julgada antes de decidir por uma migração.
+Trying this proposal does not require a migration to Tauri. The conversational
+prototype illustrates appearance and flow, not rendering parity between HTML
+and egui. Evaluate a reference egui implementation before choosing a migration.
 
-## Critérios de aceite
+## Acceptance criteria
 
-- A tela inicial permite reconhecer a câmera, ver a imagem, escolher o enquadramento e encontrar o perfil sem abrir preferências.
-- FOV, zoom, joystick e pausa ficam visíveis no enquadramento inicial; brilho fica na seção Imagem, acessível com uma seleção. A seleção de perfil permanece disponível sem abrir outra tela.
-- Soltar o joystick, cancelar o gesto, trocar de seção ou perder foco interrompe o movimento sem perder a posição escolhida.
-- O joystick aceita diagonais e setas do teclado, e não permite ultrapassar os limites da câmera.
-- Ajustes manuais deixam clara sua dependência do modo automático.
-- A confirmação de aplicação usa o valor lido de volta da câmera; o valor não salta para o padrão durante a leitura.
-- Um controle indisponível não parece um botão funcional. A razão permanece acessível em compatibilidade.
-- Navegação por teclado e foco são visíveis; escala de 150% não corta controles ou textos.
-- O fluxo não perde alterações de perfil silenciosamente.
-- Janela menor mantém ações essenciais acessíveis. O modo Compacto pode ser implementado depois da janela Studio.
+- The initial screen identifies the camera, shows the image, exposes framing,
+  and makes the profile easy to find without opening Preferences.
+- Field of view, zoom, joystick, and pause remain visible in Framing. Brightness
+  is one selection away in Image; profiles do not require another screen.
+- Releasing/cancelling the joystick, changing section, or losing focus stops
+  movement without losing the selected position.
+- The joystick supports diagonals and arrow keys without exceeding device limits.
+- Manual settings clearly explain automatic-mode dependencies.
+- Confirmation uses the value read back from the camera, without jumping to
+  defaults during reads.
+- Unavailable controls do not look usable; compatibility details explain why.
+- Keyboard navigation and focus are visible, without clipped controls/text at 150%.
+- Profile changes are never silently lost.
+- Smaller windows retain essential actions. Compact can follow Studio later.
 
-## Limites do protótipo
+## Prototype limitations
 
-As duas propostas usam uma ilustração de escritório e respostas visuais aproximadas para campo de visão, zoom, posição, brilho, contraste, saturação e espelhamento. Não acessam a câmera. A escala de zoom e a posição normalizada são ilustrativas; a versão instalada deve usar os intervalos reais anunciados pelo dispositivo. Sliders em porcentagem são uma convenção de apresentação: a implementação precisa converter o intervalo e o passo anunciados pelo driver, preservar o valor bruto em detalhes e usar unidades físicas somente quando conhecidas. O protótipo cobre os fluxos principais, não todos os controles e diálogos do produto.
+Both proposals use an office illustration and approximate visual responses for
+field of view, zoom, position, brightness, contrast, saturation, and mirroring.
+They do not access hardware. Zoom scale and normalized position are illustrative;
+the installed app must use device-reported ranges. Percentage sliders are a
+presentation convention: map the driver's actual range and step, preserve raw
+values in details, and show physical units only when known. The prototype covers
+main flows rather than every product control and dialog.

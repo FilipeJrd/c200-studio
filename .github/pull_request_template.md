@@ -1,8 +1,8 @@
-## Alteração
+## Change
 
-Descreva o problema e o comportamento esperado após a mudança.
+Describe the problem and the expected behavior after this change.
 
-## Validação
+## Validation
 
-Informe os testes executados. Para mudanças de hardware, indique o modelo,
-o firmware quando conhecido e quais controles foram verificados.
+List the checks you ran. For hardware changes, include the camera model,
+firmware version when known, and the controls you verified.

@@ -1,11 +1,16 @@
-# Contribuir
+# Contributing
 
-Crie uma branch a partir de `main` e abra um pull request com uma descrição
-do problema, da mudança e dos testes realizados. Consulte o [README](README.md)
-para instalar as dependências nativas. O `rust-toolchain.toml` fixa a versão
-do Rust e os componentes usados no desenvolvimento e no CI.
+Create a branch from `main` and open a pull request describing the problem,
+the change, and your validation. See the [README](README.md) for native build
+dependencies. `rust-toolchain.toml` pins the Rust version and components used
+in development and CI.
 
-Antes de enviar:
+Write documentation, code comments, UI text, and pull request descriptions
+in English. Keep user-facing messages concise and use the same control names
+across the app and documentation. Existing profile names are user data and
+must not be translated or migrated just to change the interface language.
+
+Before submitting:
 
 ```sh
 cargo fmt --all -- --check
@@ -13,27 +18,27 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 ```
 
-Para experimentar a interface sem acessar uma câmera:
+To try the interface without accessing a camera:
 
 ```sh
 cargo run -p c200-app -- --demo
 ```
 
-Os pull requests executam esses checks em Ubuntu 22.04 e 24.04, além de gerar
-um AppImage sobre Ubuntu 22.04 e abrir a interface em X11 virtual. O workflow
-CI também verifica os workflows com actionlint e a sintaxe dos scripts Bash.
-O workflow
-AppImage disponibiliza o pacote, seu checksum e capturas da demonstração na
-seção **Artifacts** da execução por 14 dias. Esses artefatos são builds de
-desenvolvimento do commit verificado.
+Pull requests run these checks on Ubuntu 22.04 and 24.04, build an AppImage
+on Ubuntu 22.04, and open the GUI in virtual X11. CI also checks workflow
+definitions with actionlint and the syntax of each Bash script. The AppImage
+workflow keeps its package, checksum, and demo screenshots in the run's
+**Artifacts** section for 14 days. These are development builds of the
+verified commit, not published versioned releases. See the
+[release guide](docs/releases.md) for distribution details.
 
-Testes que escrevem na câmera real são opt-in e ficam fora do CI. Consulte
-o README antes de executá-los. A demonstração e os testes automatizados não
-comprovam compatibilidade com todos os firmwares; registre verificações reais
-em mudanças de protocolo ou captura. Não inclua configurações pessoais,
-números de série, diagnósticos particulares ou imagens da câmera nos commits.
+Tests that write to real hardware are opt-in and excluded from CI. Read the
+README before running them. Demo mode and automated tests do not establish
+compatibility with every firmware; report real-device checks when changing
+protocol or capture code. Do not commit personal settings, serial numbers,
+private diagnostics, or camera images.
 
-Os workflows usam `pull_request`, permissões somente de leitura e Actions
-fixadas por commit. Mantenha essas propriedades ao modificá-los. Caches só
-são gravados por pushes na `main`. O pacote usa a mesma versão do Rust
-definida no projeto; ao alterá-la, atualize também o Dockerfile.
+Workflows use `pull_request`, read-only permissions, and Actions pinned to
+commits. Preserve those properties when changing CI. Caches are only saved
+by pushes to `main`. Packaging uses the project's pinned Rust version;
+update the Dockerfile when changing it.

@@ -197,7 +197,7 @@ pub fn fov_choice(
             egui::WidgetType::Button,
             enabled,
             selected,
-            format!("{degrees} graus, {label}"),
+            format!("{degrees} degrees, {label}"),
         )
     });
     ui.painter().text(
@@ -221,7 +221,7 @@ pub fn settings_icon(ui: &mut egui::Ui) -> Response {
     let p = Palette::get(ui.ctx());
     let (rect, response) = ui.allocate_exact_size(Vec2::splat(36.0), Sense::click());
     response.widget_info(|| {
-        egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), "Preferências")
+        egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), "Preferences")
     });
     if response.hovered() || response.has_focus() {
         ui.painter().rect_filled(rect, 7, p.inset);
@@ -242,7 +242,7 @@ pub fn settings_icon(ui: &mut egui::Ui) -> Response {
             Stroke::new(1.4_f32, p.muted),
         );
     }
-    response.on_hover_text("Preferências")
+    response.on_hover_text("Preferences")
 }
 
 pub fn brand(ui: &mut egui::Ui) {
@@ -276,7 +276,7 @@ pub fn joystick(ui: &mut egui::Ui, enabled: bool) -> (Response, [f32; 2]) {
         egui::WidgetInfo::labeled(
             egui::WidgetType::Button,
             enabled,
-            "Joystick de enquadramento. Use as setas do teclado; Shift para precisão.",
+            "Framing joystick. Use the arrow keys; hold Shift for precision.",
         )
     });
     let rect = response.rect;
@@ -341,7 +341,7 @@ pub fn joystick(ui: &mut egui::Ui, enabled: bool) -> (Response, [f32; 2]) {
                 egui::CursorIcon::Default
             })
             .on_hover_text(
-                "Arraste e segure para mover. Solte para parar. Setas do teclado também funcionam.",
+                "Drag and hold to move. Release to stop. You can also use the arrow keys.",
             ),
         if held { vector } else { [0.0, 0.0] },
     )
