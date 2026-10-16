@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=C200 Studio
+Comment=Control your Anker PowerConf C200 webcam
+Comment[pt_BR]=Controle sua webcam Anker PowerConf C200
+Exec=c200-studio
+Icon=c200-studio
+Categories=AudioVideo;Video;
+Terminal=false
+StartupNotify=true
+StartupWMClass=io.github.c200studio.C200Studio

@@ -1,0 +1,20 @@
+[package]
+name = "c200-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "c200-studio"
+path = "src/main.rs"
+
+[dependencies]
+c200-core.workspace = true
+c200-linux.workspace = true
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "glow", "wayland", "x11", "accesskit"] }
+serde_json.workspace = true
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[dev-dependencies]
+tempfile = "3"

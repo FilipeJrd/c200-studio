@@ -1,0 +1,32 @@
+name: Set up Linux build
+description: Install native dependencies and the Rust toolchain pinned by the project.
+
+inputs:
+  cache-key:
+    description: Separate caches for each distribution and build profile.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Linux dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential clang libclang-dev pkg-config curl file patchelf \
+          libx11-dev libxi-dev libxrandr-dev libxcursor-dev \
+          libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
+          libgl1-mesa-dev libegl1-mesa-dev libudev-dev libdbus-1-dev \
+          xvfb xauth desktop-file-utils
+    - name: Install pinned Rust toolchain
+      shell: bash
+      run: |
+        # rustup reads rust-toolchain.toml, including rustfmt and Clippy.
+        rustup show
+        rustc --version
+        cargo --version
+    - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      with:
+        key: ${{ inputs.cache-key }}
+        save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
