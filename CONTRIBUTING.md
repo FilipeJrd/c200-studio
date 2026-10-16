@@ -42,3 +42,37 @@ Workflows use `pull_request`, read-only permissions, and Actions pinned to
 commits. Preserve those properties when changing CI. Caches are only saved
 by pushes to `main`. Packaging uses the project's pinned Rust version;
 update the Dockerfile when changing it.
+
+## Packaging
+
+For the supported Ubuntu 22.04 glibc baseline, build in Docker:
+
+```sh
+bash scripts/portable-appimage.sh
+```
+
+To package directly on a prepared Linux x86_64 build host:
+
+```sh
+cargo install cargo-about --version 0.9.2 --locked --features cli
+bash scripts/appimage.sh
+```
+
+The script uses linuxdeploy and includes dependency license notices. Building
+on a newer distribution can require a newer glibc; use the Ubuntu 22.04 build
+for portability checks. See [the release guide](docs/releases.md) before
+publishing a package.
+
+## Documentation screenshots
+
+The README uses real screenshots of the English demo interface in light and
+dark themes, stored in `docs/screenshots/`. To capture an updated screen:
+
+```sh
+cargo run --locked -p c200-app -- --demo --smoke-test --screenshot dist/demo.png
+```
+
+For a reproducible theme, pass `--config /path/to/demo-settings.json` pointing
+to a separate demo settings file with `theme` set to `light` or `dark`. Inspect
+the image before copying it to `docs/screenshots/`; keep screenshots free of
+personal profiles, diagnostics, serial numbers, and live-camera images.

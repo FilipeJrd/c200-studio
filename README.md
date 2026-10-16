@@ -1,200 +1,172 @@
-# C200 Studio
+<div align="center">
+  <img src="assets/c200-studio.svg" width="72" alt="C200 Studio logo">
+  <h1>C200 Studio</h1>
+  <p><strong>Your PowerConf C200, at home on Linux.</strong></p>
+  <p>Live preview, precise framing, and camera profiles in a Rust desktop app.</p>
+</div>
 
 [![CI](https://github.com/FilipeJrd/c200-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/FilipeJrd/c200-studio/actions/workflows/ci.yml)
 [![AppImage](https://github.com/FilipeJrd/c200-studio/actions/workflows/appimage.yml/badge.svg)](https://github.com/FilipeJrd/c200-studio/actions/workflows/appimage.yml)
+[MIT licensed](LICENSE)
 
-An independent Linux app for the **Anker PowerConf C200** (`291a:3369`),
-with a Rust/egui interface, live preview, framing joystick, and local camera
-profiles. This is an unofficial project, unaffiliated with Anker, and does
-not depend on the original C executable.
+C200 Studio brings camera controls to Linux for the **Anker PowerConf C200**.
+Frame your shot with a joystick, adjust the image while watching a live preview,
+and save profiles for your next call.
 
-## Run
+[Get started](#get-started) · [User guide](docs/user-guide.md) · [Release guide](docs/releases.md) · [Contributing](CONTRIBUTING.md)
+
+![C200 Studio in the dark theme, with live demo preview, field-of-view choices, framing joystick, and zoom controls](docs/screenshots/studio-dark.png)
+
+*The actual app in demo mode, using a simulated camera. Shown in English.*
+
+<details>
+<summary>View the light theme</summary>
+
+![C200 Studio in the light theme, showing the same framing controls and simulated camera preview](docs/screenshots/studio-light.png)
+
+</details>
+
+## Built around your camera
+
+| | What you can do |
+| --- | --- |
+| **Frame your shot** | Choose 65°, 78°, or 95° field of view. Adjust pan and tilt with a two-axis joystick, set zoom, and mirror the image. |
+| **Tune your image** | Adjust brightness, focus, white balance, HDR, and more. Manual settings appear alongside their automatic modes. |
+| **Keep your setup** | Save named profiles for each camera and reapply them at startup or reconnection while the app is running. |
+| **See what changes** | Use the live MJPEG/YUYV preview with selectable resolution and frame rate. Pause it to release capture for a call. |
+| **Feel at home** | Light and dark themes, HiDPI rendering, keyboard controls, and automatic camera discovery. |
+
+Changes are applied to the camera and confirmed by readback. Available controls
+and their ranges come from the driver; support can vary by firmware.
+
+## Get started
+
+### Download an AppImage
+
+The current source version is **0.2.0**. Until the first versioned release,
+packages are available as development builds:
+
+1. Open the [AppImage workflow](https://github.com/FilipeJrd/c200-studio/actions/workflows/appimage.yml)
+   and choose a successful run on **main**.
+2. Download **C200-Studio-linux-x86_64** from the run's **Artifacts** section
+   and extract the archive. GitHub requires
+   [sign-in to download workflow artifacts](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
+3. Verify the checksum and launch:
+
+   ```sh
+   sha256sum --check C200-Studio-x86_64.AppImage.sha256
+   chmod +x C200-Studio-x86_64.AppImage
+   ./C200-Studio-x86_64.AppImage
+   ```
+
+AppImages target **Linux x86_64**, built on **Ubuntu 22.04**. Development artifacts
+are kept for **14 days**. See the [release guide](docs/releases.md) for downloads
+with GitHub CLI and the current release process.
+
+<details>
+<summary>Running without FUSE</summary>
 
 ```sh
-cargo run --release -p c200-app
+./C200-Studio-x86_64.AppImage --appimage-extract-and-run
 ```
 
-Without a camera, try the interface and profiles with a simulated device:
+</details>
+
+### Try it without a camera
 
 ```sh
-cargo run --release -p c200-app -- --demo
+./C200-Studio-x86_64.AppImage --demo
 ```
 
-Demo mode does not access hardware and stores settings in a separate temporary
-directory. Use `--config /path/to/settings.json` to choose another file,
-including when you want to keep demo settings between sessions.
+Demo mode uses a simulated camera and temporary settings, so you can explore
+the interface before connecting hardware.
 
-## Features
+### Your first session
 
-- Studio interface with a large preview, **Framing** and **Image** sections,
-  and separate preferences for appearance, capture, and diagnostics.
-- Two-axis virtual joystick: drag and hold to move; release to stop.
-  Arrow keys adjust the position; Shift uses the driver's smallest step.
-- C200 discovery and automatic reconnection, without assuming `/dev/video0`.
-- Vendor controls for 65°, 78°, and 95° field of view, HDR, mirroring,
-  and portrait mode when supported by the firmware.
-- V4L2 brightness, contrast, saturation, hue, gamma, sharpness, power line
-  frequency, white balance, focus, exposure, pan, tilt, and zoom.
-- Control ranges, menu entries, and availability queried from the driver.
-- MJPEG/YUYV preview with resolution and frame rate selection; prefers 720p30.
-- Profiles bound to a camera and reapplied at startup or reconnection while
-  the app is open; changes confirmed by reading values back from the device.
-- Light/dark themes, HiDPI, and keyboard operation.
-- JSON diagnostics and a demo mode for development.
+1. Connect a PowerConf C200; the app detects it automatically.
+2. Use **Framing** for field of view, joystick, zoom, and mirroring.
+3. Open **Image** to adjust brightness, focus, and color.
+4. Choose **Save profile…** to keep your settings for this camera.
+5. Choose **Pause preview** before using the camera in a video call.
 
-In **Image → Technical options**, vendor anti-flicker is a raw `0..255` byte,
-separate from standard V4L2 power line frequency. The meaning of these values
-has not been confirmed. Raw field of view is also available for parity with
-the original CLI.
+Profiles are stored locally. Selecting a profile applies it; later changes
+are saved only when you choose **Save**. See the [user guide](docs/user-guide.md)
+for configuration paths, technical controls, and troubleshooting.
 
-During calls, choose **Pause preview** to stop streaming and release capture
-for another app. Controls continue to work when the driver permits it.
-An unavailable preview does not block the other controls. C200 Studio does
-not provide a virtual camera or capture audio.
+## Build from source
 
-**Framing** brings together field of view, the joystick, zoom, and mirroring.
-Portrait mode appears when supported by the firmware. **Image** includes
-brightness, focus, color, and HDR; manual controls appear when their automatic
-mode is turned off. Exposure and additional settings are in expandable groups.
-**Preferences** shows device capabilities and reasons for unavailable controls.
+Clone the repository and install the Rust toolchain pinned in
+[`rust-toolchain.toml`](rust-toolchain.toml). With rustup, entering the project
+and running Cargo installs the specified toolchain and components automatically.
 
-The joystick uses the device's real V4L2 pan/tilt controls, limits, and steps.
-Returning the stick to its center stops sending new positions; it leaves
-your framing in place. With a real camera, the preview displays the image
-received from the device. Demo mode simulates cropping so you can try the
-control without hardware.
+```sh
+git clone https://github.com/FilipeJrd/c200-studio.git
+cd c200-studio
+```
 
-## Build on Linux
+<details>
+<summary>Ubuntu 22.04 / 24.04 dependencies</summary>
 
-Install the Rust toolchain specified in `rust-toolchain.toml`, including
-Cargo, rustfmt, and Clippy. With rustup, the toolchain file selects and installs
-these automatically. The app uses egui/eframe 0.33, direct V4L2 access, and
-image decoding in Rust. It does not require Qt, GTK for rendering, GStreamer,
-or `v4l2-ctl` at runtime. Building V4L2 requires clang and kernel headers;
-OpenGL and Wayland/X11 libraries are provided by the system.
+```sh
+sudo apt-get update
+sudo apt-get install build-essential clang libclang-dev pkg-config libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libgl1-mesa-dev libegl1-mesa-dev libudev-dev libdbus-1-dev
+```
 
-On CachyOS/Arch:
+Install Rust separately before building.
+
+</details>
+
+<details>
+<summary>Arch / CachyOS dependencies</summary>
 
 ```sh
 sudo pacman -S --needed rust clang pkgconf linux-api-headers libxkbcommon libxkbcommon-x11 wayland libx11 libxi libxrandr libxcursor libglvnd
-cargo build --release --locked -p c200-app
-./target/release/c200-studio
 ```
 
-On Ubuntu 22.04/24.04 (install Rust separately):
+When using distribution packages, make sure the installed Rust version matches
+the pinned toolchain, including rustfmt and Clippy.
+
+</details>
 
 ```sh
-sudo apt-get install clang libclang-dev pkg-config libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libgl1-mesa-dev libegl1-mesa-dev libudev-dev libdbus-1-dev
-cargo build --release --locked -p c200-app
+cargo run --release --locked -p c200-app
+# Or explore without hardware:
+cargo run --release --locked -p c200-app -- --demo
 ```
 
-## Settings and profiles
+Built with **Rust**, **egui/eframe**, and direct **V4L2** access. Runtime graphics
+use the system's OpenGL and Wayland/X11 libraries.
 
-Settings are stored in `$XDG_CONFIG_HOME/c200-studio/settings.json`, or
-`~/.config/c200-studio/settings.json`. Configuration files are not written
-beside the executable or AppImage. Invalid files and files with a newer schema
-version are preserved; the app reports the problem instead of overwriting them.
+## Documentation and development
 
-Adjust the camera, wait for confirmation, and choose **Save profile…** or
-**Save**. Saving with the current name updates that profile; selecting a
-profile applies it. Later changes only enter the profile when you save again.
-Switching profiles or cameras with unsaved changes offers to save, continue
-without saving, or cancel. Status messages distinguish pending confirmation
-from settings already applied to the camera but not yet saved in a profile.
-The profile menu offers rename, save as, and delete actions.
+| Guide | Contents |
+| --- | --- |
+| [User guide](docs/user-guide.md) | Framing, calls, profiles, diagnostics, and troubleshooting. |
+| [Releases](docs/releases.md) | Development downloads, manual releases, and planned automation. |
+| [Contributing](CONTRIBUTING.md) | Build checks, hardware testing, and pull request guidelines. |
+| [Validation](VALIDATION.md) | Tested environments, real-camera checks, and firmware limitations. |
+| [Interface design](docs/interface-benchmark.md) | The reference apps and decisions behind the Studio layout. |
 
-Profiles are not applied to a camera with a different identity. If the camera
-has no USB serial number, its identity depends on the physical USB port/hub;
-moving it may require creating or selecting a profile again. Profile names
-are user content: switching the app to English does not rename existing profiles
-or change the settings schema.
+The workspace has three crates: `c200-core` for the domain model and profiles,
+`c200-linux` for device controls and capture, and `c200-app` for the GUI.
+Pull requests run formatting, workflow validation, Clippy, and tests on Ubuntu
+22.04/24.04, plus AppImage packaging and GUI smoke tests.
 
-The app does not install a service, start automatically at login, or promise
-firmware persistence. Closing the window stops capture and device monitoring.
-Starting without a selected profile only reads the controls.
-
-## Diagnostics and tests
-
-```sh
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --locked -- -D warnings
-cargo test --workspace --locked
-cargo run -p c200-app -- --diagnose
-cargo run -p c200-app -- --probe-preview
-cargo run -p c200-app -- --demo --smoke-test --screenshot dist/demo.png
-```
-
-`--diagnose` only reads controls. `--probe-preview` opens capture, negotiates
-a video mode, receives ten frames, and releases resources, without saving
-images or changing image controls. Check these on real hardware as well;
-simulated tests do not prove firmware compatibility.
-
-The following optional test requires a C200. It changes pan, tilt, and zoom
-by one step, confirms readback, and restores the original values. It is
-excluded from normal test runs and CI:
-
-```sh
-cargo test -p c200-app --locked framing_controls_round_trip_on_hardware -- --ignored --nocapture
-```
-
-Axis directions and exposure follow the
-[kernel V4L2 reference](https://docs.kernel.org/userspace-api/media/v4l/ext-ctrls-camera.html).
-Zoom is shown as a multiplier when the C200 reports a base of 100; raw values
-and limits remain available in Preferences and control tooltips.
-
-If a device cannot be opened, check session ACLs and your distribution's
-device access rules. Run the app as a normal user. If capture is busy, stop
-capture in the other app or keep only camera controls active in C200 Studio.
-The app cannot detect the physical lens cover.
-
-## AppImage
-
-```sh
-cargo install cargo-about --version 0.9.2 --locked --features cli
-bash scripts/appimage.sh
-chmod +x dist/C200-Studio-x86_64.AppImage
-./dist/C200-Studio-x86_64.AppImage
-```
-
-The script uses linuxdeploy and includes license notices. To target Ubuntu
-22.04 and newer systems, build on Ubuntu 22.04, as in CI. An AppImage built
-on CachyOS may require a newer glibc and is suitable for local testing rather
-than establishing portability. Without FUSE, use `--appimage-extract-and-run`.
-
-To build on Ubuntu 22.04 using Docker:
+To build a portable AppImage on Ubuntu 22.04 using Docker:
 
 ```sh
 bash scripts/portable-appimage.sh
 ```
 
-## Releases
+For packaging directly on the build host, see [CONTRIBUTING.md](CONTRIBUTING.md#packaging).
 
-There are currently no versioned GitHub Releases or release tags. The
-[AppImage workflow](https://github.com/FilipeJrd/c200-studio/actions/workflows/appimage.yml)
-builds development packages for pull requests and pushes to `main`. Its
-artifacts contain an x86_64 AppImage, a SHA-256 checksum, and demo screenshots,
-and are retained for 14 days. They are tied to the tested commit.
+## License and acknowledgements
 
-Tagging a version does not currently publish a release. See
-[the release guide](docs/releases.md) for the current process, manual release
-steps, and the proposed tag-based automation.
+C200 Studio is an independent, unofficial project and is not affiliated with
+Anker. It is designed for the PowerConf C200 (`291a:3369`); other Anker devices
+are outside the current supported scope.
 
-## Project structure
-
-- `c200-core`: domain model, validation, ordered profile application, and mock backend.
-- `c200-linux`: sysfs discovery, V4L2, Extension Unit controls, and capture.
-- `c200-app`: GUI, control worker, profiles, and preview lifecycle.
-
-Hotplug is checked every two seconds through sysfs, without a daemon.
-Capture and camera I/O run outside the UI thread, keeping only the latest
-pending frame. Changing the capture mode preserves the session's image settings.
-
-The vendor protocol was ported from Eran Sandler's project. See
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the source, revision, and license.
-
-## Contributing
-
-Pull requests run formatting checks, Clippy, and tests on Ubuntu 22.04/24.04,
-plus AppImage packaging and GUI smoke tests. Development packages and demo
-screenshots are available in the AppImage workflow artifacts.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
+Released under the [MIT license](LICENSE). The vendor protocol was ported from
+[Eran Sandler's anker-powerconf-c200-linux-tools](https://github.com/erans/anker-powerconf-c200-linux-tools).
+See [third-party notices](THIRD_PARTY_NOTICES.md) for the source revision,
+attribution, and dependency license information.
