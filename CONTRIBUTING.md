@@ -21,6 +21,8 @@ cargo run -p c200-app -- --demo
 
 Os pull requests executam esses checks em Ubuntu 22.04 e 24.04, além de gerar
 um AppImage sobre Ubuntu 22.04 e abrir a interface em X11 virtual. O workflow
+CI também verifica os workflows com actionlint e a sintaxe dos scripts Bash.
+O workflow
 AppImage disponibiliza o pacote, seu checksum e capturas da demonstração na
 seção **Artifacts** da execução por 14 dias. Esses artefatos são builds de
 desenvolvimento do commit verificado.

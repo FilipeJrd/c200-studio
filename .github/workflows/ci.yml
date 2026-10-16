@@ -23,7 +23,7 @@ defaults:
 
 jobs:
   format:
-    name: Formatting
+    name: Formatting and workflows
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -32,6 +32,14 @@ jobs:
           persist-credentials: false
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
+      - name: Validate GitHub Actions workflows
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$RUNNER_TEMP/actionlint.tar.gz"
+          printf '%s  %s\n' '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' "$RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
 
   check:
     name: Clippy and tests (${{ matrix.os }})
@@ -55,4 +63,6 @@ jobs:
       - name: Validate desktop entry and shell scripts
         run: |
           desktop-file-validate assets/io.github.c200studio.C200Studio.desktop
-          bash -n assets/AppRun scripts/appimage.sh scripts/portable-appimage.sh
+          for script in assets/AppRun scripts/*.sh; do
+            bash -n "$script"
+          done
